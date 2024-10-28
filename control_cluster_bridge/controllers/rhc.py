@@ -397,29 +397,6 @@ class RHController(ABC):
 
         self._write_cmds_from_sol() # use latest solution (e.g. from bootstrap if called before running
         # the first solve) as default state
-
-        # we set homings also for joints which are not in the rhc homing map
-        # since this is usually required on env side
-    
-        # homing_full = self._homer_env.get_homing().reshape(1, 
-        #                 self.robot_cmds.n_jnts())
-    
-        # null_action = np.zeros((1, self.robot_cmds.n_jnts()), 
-        #                 dtype=self._dtype)
-
-        # self.robot_cmds.jnts_state.set(data=homing_full, data_type="q", 
-        #                     robot_idxs=self.controller_index_np,
-        #                     no_remap=True)
-        # self.robot_cmds.jnts_state.set(data=null_action, data_type="v", 
-        #                     robot_idxs=self.controller_index_np,
-        #                     no_remap=True)
-        # self.robot_cmds.jnts_state.set(data=null_action, data_type="eff", 
-        #                     robot_idxs=self.controller_index_np,
-        #                     no_remap=True)
-        
-        # # write all joints (including homing for env-only ones)
-        # self.robot_cmds.jnts_state.synch_retry(row_index=self.controller_index, col_index=0, n_rows=1, n_cols=self.robot_cmds.jnts_state.n_cols,
-        #                         read=False) # only write data corresponding to this controller
     
     def failed(self):
         return self._failed
@@ -549,9 +526,33 @@ class RHController(ABC):
             col_index=0, n_rows=1, n_cols=self.rhc_status.rhc_static_info.n_cols,
             read=False)
         
+        # we set homings also for joints which are not in the rhc homing map
+        # since this is usually required on env side
+    
+        homing_full = self._homer_env.get_homing().reshape(1, 
+                        self.robot_cmds.n_jnts())
+    
+        null_action = np.zeros((1, self.robot_cmds.n_jnts()), 
+                        dtype=self._dtype)
+
+        self.robot_cmds.jnts_state.set(data=homing_full, data_type="q", 
+                            robot_idxs=self.controller_index_np,
+                            no_remap=True)
+        self.robot_cmds.jnts_state.set(data=null_action, data_type="v", 
+                            robot_idxs=self.controller_index_np,
+                            no_remap=True)
+        self.robot_cmds.jnts_state.set(data=null_action, data_type="eff", 
+                            robot_idxs=self.controller_index_np,
+                            no_remap=True)
+        
+        # write all joints (including homing for env-only ones)
+        self.robot_cmds.jnts_state.synch_retry(row_index=self.controller_index, col_index=0, 
+                                n_rows=1, n_cols=self.robot_cmds.jnts_state.n_cols,
+                                read=False) # only write data corresponding to this controller
+        
         self.reset() # reset controller
         self._n_resets=0
-
+        
         # for last we create the trigger client
         self._remote_triggerer = RemoteTriggererClnt(namespace=self.namespace,
                                         verbose=self._verbose,
