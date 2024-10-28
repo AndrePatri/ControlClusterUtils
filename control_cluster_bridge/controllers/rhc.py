@@ -485,12 +485,6 @@ class RHController(ABC):
         self.rhc_status.registration.synch_all(retry = True,
                                         read = False) 
 
-        # we can now release everything so that other controllers can register
-        self.rhc_status.controllers_counter.data_sem_release()
-        self.rhc_status.registration.data_sem_release()
-
-        self._registered = True
-
         # now all heavy stuff that would otherwise make the registration slow
         self._remote_term = SharedTWrapper(namespace=self.namespace,
             basename="RemoteTermination",
@@ -504,7 +498,6 @@ class RHController(ABC):
 
         # other initializations
         
-        self._init_states() # initializes shared mem. states
         self.cluster_stats = RhcProfiling(is_server=False, 
                                     name=self.namespace,
                                     verbose=self._verbose,
@@ -512,50 +505,14 @@ class RHController(ABC):
                                     safe=True) # profiling data
         self.cluster_stats.run()
         self.cluster_stats.synch_info()
-        self._init_problem() # we call the child's initialization method for the actual problem
-        self._post_problem_init()
-
+    
         self._create_jnt_maps()
         self.init_rhc_task_cmds() # initializes rhc interface to external commands (defined by child class)
         self._consinstency_checks() # sanity checks
 
-        if self._debug:
-            # internal solution is published on shared mem
-            # we assume the user has made available the cost
-            # and constraint data at this point (e.g. through
-            # the solution of a bootstrap)
-            cost_data = self._get_cost_data()
-            constr_data = self._get_constr_data()
-            config = RhcInternal.Config(is_server=True, 
-                        enable_q= True, 
-                        enable_v=True, 
-                        enable_a=True, 
-                        enable_a_dot=False, 
-                        enable_f=True,
-                        enable_f_dot=False, 
-                        enable_eff=False, 
-                        cost_names=cost_data[0], 
-                        cost_dims=cost_data[1],
-                        constr_names=constr_data[0],
-                        constr_dims=constr_data[1],
-                        )
-            self.rhc_internal = RhcInternal(config=config, 
-                                    namespace=self.namespace,
-                                    rhc_index = self.controller_index,
-                                    n_contacts=self.n_contacts,
-                                    n_jnts=self.n_dofs,
-                                    jnt_names=self._controller_side_jnt_names,
-                                    n_nodes=self._n_nodes,
-                                    verbose = self._verbose,
-                                    vlevel=VLevel.V2,
-                                    force_reconnection=True,
-                                    safe=True)
-            self.rhc_internal.run()
-
         if self._homer is None:
             self._init_robot_homer() # call this in case it wasn't called by child
     
-
         self._robot_mass = self._get_robot_mass() # uses child class implemented method
         self._contact_f_scale = self._get_robot_mass() * 9.81
 
@@ -601,12 +558,51 @@ class RHController(ABC):
                                         vlevel=VLevel.V2) # remote triggering
         self._remote_triggerer.run()
 
+        if self._debug:
+            # internal solution is published on shared mem
+            # we assume the user has made available the cost
+            # and constraint data at this point (e.g. through
+            # the solution of a bootstrap)
+            cost_data = self._get_cost_data()
+            constr_data = self._get_constr_data()
+            config = RhcInternal.Config(is_server=True, 
+                        enable_q= True, 
+                        enable_v=True, 
+                        enable_a=True, 
+                        enable_a_dot=False, 
+                        enable_f=True,
+                        enable_f_dot=False, 
+                        enable_eff=False, 
+                        cost_names=cost_data[0], 
+                        cost_dims=cost_data[1],
+                        constr_names=constr_data[0],
+                        constr_dims=constr_data[1],
+                        )
+            self.rhc_internal = RhcInternal(config=config, 
+                                    namespace=self.namespace,
+                                    rhc_index = self.controller_index,
+                                    n_contacts=self.n_contacts,
+                                    n_jnts=self.n_dofs,
+                                    jnt_names=self._controller_side_jnt_names,
+                                    n_nodes=self._n_nodes,
+                                    verbose = self._verbose,
+                                    vlevel=VLevel.V2,
+                                    force_reconnection=True,
+                                    safe=True)
+            self.rhc_internal.run()
+
         Journal.log(self._class_name_base,
                     "_register_to_cluster",
                     f"controller {self.controller_index_np} registered",
                     LogType.STAT,
                     throw_when_excep = True)
         
+        # we can now release everything so that other controllers can register
+        self.rhc_status.controllers_counter.data_sem_release()
+        self.rhc_status.registration.data_sem_release()
+
+        self._registered = True
+
     def _unregister_from_cluster(self):
         
         if self._received_trigger:
@@ -688,6 +684,11 @@ class RHController(ABC):
                     LogType.STAT,
                     throw_when_excep = True)
         
+        self._init_states() # initializes shared mem. states 
+
+        self._init_problem() # we call the child's initialization method for the actual problem
+        self._post_problem_init()
+
         self._register_to_cluster() # registers the controller to the cluster
 
         Journal.log(self._class_name_base,
