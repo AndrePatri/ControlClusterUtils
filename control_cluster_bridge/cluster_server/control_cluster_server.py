@@ -100,6 +100,10 @@ class ControlClusterServer(ABC):
             self._contact_linknames=[]
             for i in range(self._n_contacts):
                 self._contact_linknames.append(f"contact_{i+1}")
+        if len(self._contact_linknames) == 0:
+            for i in range(self._n_contacts):
+                self._contact_linknames.append(f"contact_{i+1}")
+                
         self._solution_time = np.nan
         self._start_time = np.nan
         

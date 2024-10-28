@@ -563,8 +563,8 @@ class ContactWrenches(SharedTWrapper):
                 self.contact_names = [""] * self.n_contacts
             else:
                 if not len(self.contact_names) == self.n_contacts:
-                    exception = f"Joint names list length {len(self.contact_names)} " + \
-                        f"does not match the number of joints {self.n_contacts}"
+                    exception = f"Contact names list length {len(self.contact_names)} " + \
+                        f"does not match the number of contacts {self.n_contacts}"
                     Journal.log(self.__class__.__name__,
                         "run",
                         exception,
