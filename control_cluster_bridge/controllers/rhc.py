@@ -137,16 +137,16 @@ class RHController(ABC):
 
         self._class_name_base = f"{self.__class__.__name__}"
 
-        self._init()
-
-        if not hasattr(self, '_rhc_fpaths'):
-            self._rhc_fpaths = []
-        self._rhc_fpaths.append(os.path.abspath(__file__))
-
         self._contact_force_base_loc_aux=np.zeros((1,3),dtype=self._dtype)
         self._norm_grav_vector_w=np.zeros((1,3),dtype=self._dtype)
         self._norm_grav_vector_w[:, 2]=-1.0
         self._norm_grav_vector_base_loc=np.zeros((1,3),dtype=self._dtype)
+
+        self._init() # initialize controller
+
+        if not hasattr(self, '_rhc_fpaths'):
+            self._rhc_fpaths = []
+        self._rhc_fpaths.append(os.path.abspath(__file__))
         
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -355,9 +355,8 @@ class RHController(ABC):
     def reset(self):
         
         if not self._closed:
-            self._reset()
+            self.reset_rhc_data()
             self._failed = False # allow triggering
-            self.set_cmds_to_homing()
             self._n_resets += 1
             self.rhc_status.fails.write_retry(False, 
                                         row_index=self.controller_index,
@@ -391,30 +390,36 @@ class RHController(ABC):
 
         return True
 
-    def set_cmds_to_homing(self):
+    def reset_rhc_data(self):
         
+        self._reset() # custom reset (e.g. it should set the current solution to some
+        # default solution, like a bootstrap)
+
+        self._write_cmds_from_sol() # use latest solution (e.g. from bootstrap if called before running
+        # the first solve) as default state
+
         # we set homings also for joints which are not in the rhc homing map
         # since this is usually required on env side
-        
-        homing_full = self._homer_env.get_homing().reshape(1, 
-                        self.robot_cmds.n_jnts())
     
-        null_action = np.zeros((1, self.robot_cmds.n_jnts()), 
-                        dtype=self._dtype)
+        # homing_full = self._homer_env.get_homing().reshape(1, 
+        #                 self.robot_cmds.n_jnts())
+    
+        # null_action = np.zeros((1, self.robot_cmds.n_jnts()), 
+        #                 dtype=self._dtype)
+
+        # self.robot_cmds.jnts_state.set(data=homing_full, data_type="q", 
+        #                     robot_idxs=self.controller_index_np,
+        #                     no_remap=True)
+        # self.robot_cmds.jnts_state.set(data=null_action, data_type="v", 
+        #                     robot_idxs=self.controller_index_np,
+        #                     no_remap=True)
+        # self.robot_cmds.jnts_state.set(data=null_action, data_type="eff", 
+        #                     robot_idxs=self.controller_index_np,
+        #                     no_remap=True)
         
-        self.robot_cmds.jnts_state.set(data=homing_full, data_type="q", 
-                            robot_idxs=self.controller_index_np,
-                            no_remap=True)
-        self.robot_cmds.jnts_state.set(data=null_action, data_type="v", 
-                            robot_idxs=self.controller_index_np,
-                            no_remap=True)
-        self.robot_cmds.jnts_state.set(data=null_action, data_type="eff", 
-                            robot_idxs=self.controller_index_np,
-                            no_remap=True)
-        
-        # write all joints (including homing for env-only ones)
-        self.robot_cmds.jnts_state.synch_retry(row_index=self.controller_index, col_index=0, n_rows=1, n_cols=self.robot_cmds.jnts_state.n_cols,
-                                read=False) # only write data corresponding to this controller
+        # # write all joints (including homing for env-only ones)
+        # self.robot_cmds.jnts_state.synch_retry(row_index=self.controller_index, col_index=0, n_rows=1, n_cols=self.robot_cmds.jnts_state.n_cols,
+        #                         read=False) # only write data corresponding to this controller
     
     def failed(self):
         return self._failed
@@ -508,6 +513,8 @@ class RHController(ABC):
         self.cluster_stats.run()
         self.cluster_stats.synch_info()
         self._init_problem() # we call the child's initialization method for the actual problem
+        self._post_problem_init()
+
         self._create_jnt_maps()
         self.init_rhc_task_cmds() # initializes rhc interface to external commands (defined by child class)
         self._consinstency_checks() # sanity checks
@@ -547,7 +554,7 @@ class RHController(ABC):
 
         if self._homer is None:
             self._init_robot_homer() # call this in case it wasn't called by child
-        self.set_cmds_to_homing()
+    
 
         self._robot_mass = self._get_robot_mass() # uses child class implemented method
         self._contact_f_scale = self._get_robot_mass() * 9.81
@@ -585,6 +592,9 @@ class RHController(ABC):
             col_index=0, n_rows=1, n_cols=self.rhc_status.rhc_static_info.n_cols,
             read=False)
         
+        self.reset() # reset controller
+        self._n_resets=0
+
         # for last we create the trigger client
         self._remote_triggerer = RemoteTriggererClnt(namespace=self.namespace,
                                         verbose=self._verbose,
@@ -679,7 +689,7 @@ class RHController(ABC):
                     throw_when_excep = True)
         
         self._register_to_cluster() # registers the controller to the cluster
-        
+
         Journal.log(self._class_name_base,
                     "_init",
                     f"RHC controller initialized with cluster index {self.controller_index} on process {os.getpid()}",
@@ -692,7 +702,7 @@ class RHController(ABC):
                                 row_index=self.controller_index,
                                 col_index=0)
         # also set cmds to homing for safety
-        self.set_cmds_to_homing()
+        # self.reset_rhc_data()
 
     def _on_failure(self):
         
@@ -801,6 +811,9 @@ class RHController(ABC):
         self.rhc_status.rhc_nodes_constr_viol.write_retry(data=self._get_rhc_nodes_constr_viol(), 
                                             row_index=self.controller_index, 
                                             col_index=0)
+        self.rhc_status.rhc_fail_idx.write_retry(self._get_failure_index(), 
+                                        row_index=self.controller_index,
+                                        col_index=0) # write idx  on shared mem
         
         if f_contact is not None:
             for i in range(self.rhc_status.n_contacts):
@@ -868,18 +881,16 @@ class RHController(ABC):
         # to be overriden by parent
         return 0.0
     
+    def _get_failure_index(self):
+        fail_idx=self._get_fail_idx()
+        if fail_idx>self._fail_idx_thresh:
+            fail_idx=self._fail_idx_thresh 
+        return fail_idx
+    
     def _check_rhc_failure(self):
-        # we use rhc constr. viol to detect failures
-        
-        idx = self._get_fail_idx()
-        rhc_failed=idx>self._fail_idx_thresh
-        if rhc_failed: # clipping at threshold to avoid propagating infs/nans
-            idx=self._fail_idx_thresh 
-        self.rhc_status.rhc_fail_idx.write_retry(idx, 
-                                        row_index=self.controller_index,
-                                        col_index=0) # write idx  on shared mem
-        
-        return rhc_failed
+        # we use fail idx viol to detect failures
+        idx = self._get_failure_index()
+        return idx>=self._fail_idx_thresh
     
     def _update_rhc_internal(self):
         # data which is not enabled in the config is not actually 
@@ -1046,4 +1057,8 @@ class RHController(ABC):
     @abstractmethod
     def _init_problem(self):
         # initialized horizon's TO problem
+        pass
+
+    @abstractmethod
+    def _post_problem_init(self):
         pass

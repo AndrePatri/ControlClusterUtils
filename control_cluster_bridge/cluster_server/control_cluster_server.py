@@ -304,7 +304,7 @@ class ControlClusterServer(ABC):
             self._pre_trigger_logs() # debug info + checks
             self._require_pretrigger() # we force sequentiality between pretriggering and
             # solution triggering
-        self._set_rhc_state() # set the state employed by the controllers in the cluster       
+
         self._trigger_solution() # triggers solution of all controllers in the cluster 
         # which are ACTIVE using the latest available state
         if self._debug:
@@ -524,7 +524,7 @@ class ControlClusterServer(ABC):
     def triggered(self):
         return self._triggered
     
-    def _set_rhc_state(self):
+    def write_robot_state(self):
 
         if self._using_gpu:
             # updates shared tensor on CPU with latest data from states on GPU
