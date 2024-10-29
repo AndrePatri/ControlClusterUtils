@@ -231,6 +231,142 @@ class RhcRefs(SharedDataBase):
                 with_gpu_mirror=with_gpu_mirror,
                 fill_value = True)
 
+    class FlightInfo(SharedTWrapper):
+
+        def __init__(self,
+                namespace = "",
+                is_server = False, 
+                n_robots: int = None, 
+                n_contacts: int = -1,
+                verbose: bool = False, 
+                vlevel: VLevel = VLevel.V0,
+                safe: bool = True,
+                force_reconnection: bool = False,
+                with_gpu_mirror: bool = False,
+                with_torch_view: bool = False,
+                fill_value = 0):
+            
+            basename = "FlightInfo" 
+            
+            self._n_data = 2 # flight pos, flight length
+
+            self.n_robots = n_robots
+            self.n_contacts=n_contacts
+
+            super().__init__(namespace = namespace,
+                basename = basename,
+                is_server = is_server, 
+                n_rows = n_robots, 
+                n_cols = self._n_data*n_contacts, 
+                dtype = dtype.Float,
+                verbose = verbose, 
+                vlevel = vlevel,
+                fill_value = fill_value, 
+                safe = safe,
+                force_reconnection=force_reconnection,
+                with_gpu_mirror=with_gpu_mirror,
+                with_torch_view=with_torch_view)
+
+            # root
+            self._pos = None
+            self._len = None
+            self._all = None
+
+            self._pos_gpu = None
+            self._len_gpu = None
+            self._all_gpu = None
+            
+        def run(self):
+            # overriding parent 
+            super().run()
+            if not self.is_server:
+                self.n_robots = self.n_rows
+                self.n_contacts = int(self.n_cols/self._n_data)
+            self._init_views()
+
+        def _init_views(self):
+
+            # root
+            if self._with_torch_view:
+                self._pos = self.get_torch_mirror()[:, 0:self.n_contacts].view(self.n_robots, self.n_contacts)
+                self._len = self.get_torch_mirror()[:, self.n_contacts:2*self.n_contacts].view(self.n_robots, self.n_contacts)
+                self._all = self.get_torch_mirror()[:, 0:self._n_data*self.n_contacts].view(self.n_robots, self._n_data*self.n_contacts)
+            else:
+                self._pos = self.get_numpy_mirror()[:, 0:self.n_contacts].view()
+                self._len = self.get_numpy_mirror()[:, self.n_contacts:2*self.n_contacts].view()
+                self._all = self.get_numpy_mirror()[:, 0:self._n_data*self.n_contacts].view()
+
+            if self.gpu_mirror_exists():
+
+                # gpu views
+                self._pos_gpu = self._gpu_mirror[:, 0:self.n_contacts].view(self.n_robots, self.n_contacts)
+                self._len_gpu = self._gpu_mirror[:, self.n_contacts:2*self.n_contacts].view(self.n_robots, self.n_contacts)
+                self._all_gpu = self._gpu_mirror[:, 0:self._n_data*self.n_contacts].view(self.n_robots, self._n_data*self.n_contacts)
+        
+        def _retrieve_data(self,
+            name: str,
+            gpu: bool = False):
+            
+            if not gpu:
+                if name == "pos":
+                    return self._pos
+                elif name == "len":
+                    return self._len
+                elif name == "all":
+                    return self._all
+                else:
+                    return None
+            else:
+                if name == "pos":
+                    return self._pos_gpu
+                elif name == "len":
+                    return self._len_gpu
+                elif name == "all":
+                    return self._all_gpu
+                else:
+                    return None
+        
+        def set(self,
+                data,
+                data_type: str,
+                robot_idxs= None,
+                contact_idx = None,
+                gpu: bool = False):
+
+            internal_data = self._retrieve_data(name=data_type,
+                gpu=gpu)
+            
+            if robot_idxs is None:
+                if contact_idx is None:
+                    internal_data[:, :] = data
+                else:
+                    internal_data[:, contact_idx] = data
+            else:
+                if contact_idx is None:
+                    internal_data[robot_idxs, :] = data
+                else:
+                    internal_data[robot_idxs, contact_idx] = data
+                    
+        def get(self,
+            data_type: str,
+            robot_idxs = None,
+            contact_idx = None,
+            gpu: bool = False):
+
+            internal_data = self._retrieve_data(name=data_type,
+                        gpu=gpu)
+                
+            if robot_idxs is None:
+                if contact_idx is None:
+                    return internal_data
+                else:
+                    return internal_data[:, contact_idx]
+            else:
+                if contact_idx is None:
+                    return internal_data[robot_idxs, :]
+                else:
+                    return internal_data[robot_idxs, contact_idx]
+                
     def __init__(self,
                 namespace: str,
                 is_server: bool,
@@ -294,7 +430,7 @@ class RhcRefs(SharedDataBase):
                             with_gpu_mirror=with_gpu_mirror,
                             with_torch_view=with_torch_view,
                             safe=safe)
-
+        
         self.contact_flags = None
 
         self._is_runnning = False
@@ -310,7 +446,8 @@ class RhcRefs(SharedDataBase):
     def get_shared_mem(self):
         return self.rob_refs.get_shared_mem() + [
             self.phase_id.get_shared_mem(),
-            self.contact_flags.get_shared_mem()]
+            self.contact_flags.get_shared_mem(),
+            self.flight_info.get_shared_mem()]
     
     def run(self):
 
@@ -334,6 +471,18 @@ class RhcRefs(SharedDataBase):
                             safe=self.safe)
         self.contact_flags.run()
 
+        self.flight_info = self.FlightInfo(namespace=self.namespace,
+                            is_server=self.is_server,
+                            n_robots=self.n_robots,
+                            n_contacts=self._n_contacts,
+                            verbose=self.verbose,
+                            vlevel=self.vlevel,
+                            force_reconnection=self.force_reconnection,
+                            with_gpu_mirror=self._with_gpu_mirror,
+                            with_torch_view=self._with_torch_view,
+                            safe=self.safe)
+        self.flight_info.run()
+
         self._is_runnning = True
     
     def n_contacts(self):
@@ -345,6 +494,7 @@ class RhcRefs(SharedDataBase):
             
             self.rob_refs.close()
             self.phase_id.close()
+            self.flight_info.close()
             self.contact_flags.close()
 
             self._is_runnning = False

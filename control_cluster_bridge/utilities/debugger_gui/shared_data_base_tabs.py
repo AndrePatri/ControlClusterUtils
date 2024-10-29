@@ -380,7 +380,7 @@ class RHCRefs(SharedDataWindow):
         super().__init__(update_data_dt = update_data_dt,
             update_plot_dt = update_plot_dt,
             window_duration = window_duration,
-            grid_n_rows = 4,
+            grid_n_rows = 5,
             grid_n_cols = 2,
             window_buffer_factor = window_buffer_factor,
             namespace = namespace,
@@ -506,6 +506,21 @@ class RHCRefs(SharedDataWindow):
                     legend_list=contact_vel_legend, 
                     ylabel="[m]"))
         
+        flight_info_leg=[""]*self.shared_data_clients[0].flight_info.n_cols
+        for i in range(self.shared_data_clients[0].n_contacts()):
+            flight_info_leg[i]=f"pos-contact{i}"
+            flight_info_leg[i+self.shared_data_clients[0].n_contacts()]=f"len-contact{i}"
+        self.rt_plotters.append(RtPlotWindow(data_dim=self.shared_data_clients[0].flight_info.n_cols,
+                    n_data = 1, 
+                    update_data_dt=self.update_data_dt, 
+                    update_plot_dt=self.update_plot_dt,
+                    window_duration=self.window_duration, 
+                    parent=None, 
+                    base_name="Flight info",
+                    window_buffer_factor=self.window_buffer_factor, 
+                    legend_list=flight_info_leg, 
+                    ylabel="[]"))
+        
         # root state
         self.grid.addFrame(self.rt_plotters[0].base_frame, 0, 0)
         self.grid.addFrame(self.rt_plotters[1].base_frame, 0, 1)
@@ -515,6 +530,7 @@ class RHCRefs(SharedDataWindow):
         self.grid.addFrame(self.rt_plotters[5].base_frame, 2, 1)
         self.grid.addFrame(self.rt_plotters[6].base_frame, 3, 0)
         self.grid.addFrame(self.rt_plotters[7].base_frame, 3, 1)
+        self.grid.addFrame(self.rt_plotters[8].base_frame, 4, 0)
         
     def _init_shared_data(self):
         
@@ -548,6 +564,7 @@ class RHCRefs(SharedDataWindow):
             self.shared_data_clients[0].rob_refs.synch_from_shared_mem()
             self.shared_data_clients[0].contact_flags.synch_all(read=True, retry=True)
             self.shared_data_clients[0].phase_id.synch_all(read=True, retry=True)
+            self.shared_data_clients[0].flight_info.synch_all(read=True, retry=True)
 
             self.shared_data_clients[1].synch_from_shared_mem()
 
@@ -584,6 +601,8 @@ class RHCRefs(SharedDataWindow):
             self.rt_plotters[6].rt_plot_widget.update(self.shared_data_clients[0].rob_refs.contact_pos.get(data_type="p", robot_idxs=np_idx).flatten())
             self.rt_plotters[7].rt_plot_widget.update(self.shared_data_clients[0].rob_refs.contact_vel.get(data_type="v", robot_idxs=np_idx).flatten())
 
+            # flight info
+            self.rt_plotters[8].rt_plot_widget.update(self.shared_data_clients[0].flight_info.get(data_type="all", robot_idxs=np_idx).flatten())
 class RHCInternal(SharedDataWindow):
 
     def __init__(self, 
