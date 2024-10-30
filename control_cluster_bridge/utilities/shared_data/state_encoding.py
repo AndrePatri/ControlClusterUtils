@@ -640,15 +640,18 @@ class ContactWrenches(SharedTWrapper):
         internal_data = self._retrieve_data(name=data_type,
                     gpu=gpu)
         data_length=int(internal_data.shape[1]/self.n_contacts)
+        contact_idx=None
+        
         if not contact_name in self.contact_names:
             contact_list = "\t".join(self.contact_names)
             exception = f"Contact name {contact_name} not in contact list [{contact_list}]"
             Journal.log(self.__class__.__name__,
                 "set_f_contact",
                 exception,
-                LogType.EXCEP,
+                LogType.WARN,
                 throw_when_excep = True)
-        contact_idx = self.contact_names.index(contact_name)
+        else:
+            contact_idx = self.contact_names.index(contact_name)
         
         if robot_idxs is None:
             if contact_idx is None:

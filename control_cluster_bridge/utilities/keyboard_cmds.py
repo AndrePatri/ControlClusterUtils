@@ -16,6 +16,7 @@
 # along with CoClusterBridge.  If not, see <http://www.gnu.org/licenses/>.
 # 
 from pynput import keyboard
+from pynput.keyboard import Key
 
 from SharsorIPCpp.PySharsor.wrappers.shared_data_view import SharedTWrapper
 from SharsorIPCpp.PySharsorIPC import VLevel
@@ -396,41 +397,43 @@ class RefsFromKeyboard:
     def _set_contact_target_pos(self,
             key):
 
-        if key.char == "P" and (self._phase_id_current==0):
-                    
-            self.enable_contact_pos_change = not self.enable_contact_pos_change
-            info = f"Contact pos change enabled: {self.enable_contact_pos_change}"
-            Journal.log(self.__class__.__name__,
-                "_set_phase_id",
-                info,
-                LogType.INFO,
-                throw_when_excep = True)
+        if hasattr(key, 'char'):
+            
+            if key.char == "P":
+                self.enable_contact_pos_change = not self.enable_contact_pos_change
+                info = f"Contact pos change enabled: {self.enable_contact_pos_change}"
+                Journal.log(self.__class__.__name__,
+                    "_set_phase_id",
+                    info,
+                    LogType.INFO,
+                    throw_when_excep = True)
 
-            if not self.enable_contact_pos_change:
-                self.contact_pos_change_vals[:, :]=0
+                if not self.enable_contact_pos_change:
+                    self.contact_pos_change_vals[:, :]=0
                 
-        if self.enable_contact_pos_change:
-            if key.char == "7":
-                self.enable_contact_pos_change_ci[0] = not self.enable_contact_pos_change_ci[0]
-            if key.char == "9":
-                self.enable_contact_pos_change_ci[1] = not self.enable_contact_pos_change_ci[1]
-            if key.char == "1":
-                self.enable_contact_pos_change_ci[2] = not self.enable_contact_pos_change_ci[2]
-            if key.char == "3":
-                self.enable_contact_pos_change_ci[3] = not self.enable_contact_pos_change_ci[3]
-            if key.char == "x":
-                self.enable_contact_pos_change_xyz[0] = not self.enable_contact_pos_change_xyz[0]
-            if key.char == "y":
-                self.enable_contact_pos_change_xyz[1] = not self.enable_contact_pos_change_xyz[1]
-            if key.char == "z":
-                self.enable_contact_pos_change_xyz[2] = not self.enable_contact_pos_change_xyz[2]
-       
-            if key.char == "+":
-                self.contact_pos_change_vals[np.ix_(self.enable_contact_pos_change_xyz,
-                    self.enable_contact_pos_change_ci)]+= self._contact_dpos
-            if key.char == "-":
-                self.contact_pos_change_vals[np.ix_(self.enable_contact_pos_change_xyz,
-                    self.enable_contact_pos_change_ci)]-= self._contact_dpos
+            if self.enable_contact_pos_change:
+                if key.char == "x":
+                    self.enable_contact_pos_change_xyz[0] = not self.enable_contact_pos_change_xyz[0]
+                if key.char == "y":
+                    self.enable_contact_pos_change_xyz[1] = not self.enable_contact_pos_change_xyz[1]
+                if key.char == "z":
+                    self.enable_contact_pos_change_xyz[2] = not self.enable_contact_pos_change_xyz[2]
+        
+                if key.char == "+":
+                    self.contact_pos_change_vals[np.ix_(self.enable_contact_pos_change_xyz,
+                        self.enable_contact_pos_change_ci)]+= self._contact_dpos
+                if key.char == "-":
+                    self.contact_pos_change_vals[np.ix_(self.enable_contact_pos_change_xyz,
+                        self.enable_contact_pos_change_ci)]-= self._contact_dpos
+        
+        if key == Key.insert:
+            self.enable_contact_pos_change_ci[0] = not self.enable_contact_pos_change_ci[0]
+        if key == Key.page_up:
+            self.enable_contact_pos_change_ci[1] = not self.enable_contact_pos_change_ci[1]
+        if key == Key.delete:
+            self.enable_contact_pos_change_ci[2] = not self.enable_contact_pos_change_ci[2]
+        if key == Key.page_down:
+            self.enable_contact_pos_change_ci[3] = not self.enable_contact_pos_change_ci[3]
                 
         current_contact_pos_trgt = self._shared_refs.rob_refs.contact_pos.get(data_type="p", 
                                             robot_idxs=self.cluster_idx_np)
@@ -455,7 +458,8 @@ class RefsFromKeyboard:
                 self._set_linvel(key)
                 # orientation (twist)
                 self._set_twist(key)
-                self._set_contact_target_pos(key)
+
+            self._set_contact_target_pos(key)
 
             self._synch(read=False)
 
