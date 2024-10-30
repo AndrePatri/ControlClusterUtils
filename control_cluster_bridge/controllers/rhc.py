@@ -83,7 +83,7 @@ class RHController(ABC):
         self._registered = False
         self._closed = False 
         
-        self._allow_triggering_when_failed = True
+        self._allow_triggering_when_failed = False
         
         self._profiling_data_dict = {}
         self._profiling_data_dict["full_solve_dt"] = np.nan
