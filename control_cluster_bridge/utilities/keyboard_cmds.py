@@ -425,7 +425,11 @@ class RefsFromKeyboard:
                 if key.char == "-":
                     self.contact_pos_change_vals[np.ix_(self.enable_contact_pos_change_xyz,
                         self.enable_contact_pos_change_ci)]-= self._contact_dpos
-        
+                
+                # not_enabled = [not x for x in self.enable_contact_pos_change_xyz]
+                # self.contact_pos_change_vals[np.ix_(not_enabled,
+                #         self.enable_contact_pos_change_ci)]= 0
+                
         if key == Key.insert:
             self.enable_contact_pos_change_ci[0] = not self.enable_contact_pos_change_ci[0]
         if key == Key.page_up:

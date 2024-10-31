@@ -206,6 +206,7 @@ class RHController(ABC):
     def init_rhc_task_cmds(self):
         
         self.rhc_refs = self._init_rhc_task_cmds()
+        self.rhc_refs.reset()
         
     def _init_states(self):
         
@@ -394,6 +395,8 @@ class RHController(ABC):
         
         self._reset() # custom reset (e.g. it should set the current solution to some
         # default solution, like a bootstrap)
+
+        self.rhc_refs.reset() # reset rhc refs to default
 
         self._write_cmds_from_sol() # use latest solution (e.g. from bootstrap if called before running
         # the first solve) as default state
