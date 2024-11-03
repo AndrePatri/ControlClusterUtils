@@ -410,6 +410,9 @@ class RefsFromKeyboard:
 
                 if not self.enable_contact_pos_change:
                     self.contact_pos_change_vals[:, :]=0
+                    self.enable_contact_pos_change_xyz[0]=0
+                    self.enable_contact_pos_change_xyz[1]=0
+                    self.enable_contact_pos_change_xyz[2]=0
                 
             if self.enable_contact_pos_change:
                 if key.char == "x":
@@ -442,6 +445,8 @@ class RefsFromKeyboard:
         current_contact_pos_trgt = self._shared_refs.rob_refs.contact_pos.get(data_type="p", 
                                             robot_idxs=self.cluster_idx_np)
         current_contact_pos_trgt[:] = self.contact_pos_change_vals.flatten()
+
+        self.contact_pos_change_vals
 
     def _on_press(self, key):
         if self.launch_keyboard_cmds.read_retry(row_index=0,

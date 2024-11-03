@@ -74,6 +74,7 @@ class RHController(ABC):
         self._n_intervals = self._n_nodes - 1 
         self._t_horizon = self._n_intervals * dt
         self._set_rhc_pred_idx() # prection is by default written on last node
+        self._set_rhc_cmds_idx() # default to idx 2 (i.e. cmds to get to third node)
         self.controller_index = None # will be assigned upon registration to a cluster
         self.controller_index_np = None 
         self._robot_mass=1.0
@@ -172,6 +173,16 @@ class RHController(ABC):
     def _set_rhc_pred_idx(self):
         # default to last node
         self._pred_node_idx=self._n_nodes-1
+    
+    def _set_rhc_cmds_idx(self):
+        # use index 2 by default to compensate for
+        # the inevitable action delay 
+        # (get_state, trigger sol -> +dt -> apply sol )
+        # if we apply action from second node (idenx 1) 
+        # that action will already be one dt old. We assume we were already
+        # applying the right action to get to the state of node idx 1 and get the 
+        # cmds for reaching the state at idx 1
+        self._rhc_cmds_node_idx=2
 
     def _close(self):
         if not self._closed:
@@ -752,24 +763,25 @@ class RHController(ABC):
         # gets data from the solution and updates the view on the shared data
 
         # cmds for robot
-        self.robot_cmds.jnts_state.set(data=self._get_jnt_q_from_sol(node_idx=1), data_type="q", robot_idxs=self.controller_index_np)
-        self.robot_cmds.jnts_state.set(data=self._get_jnt_v_from_sol(node_idx=1), data_type="v", robot_idxs=self.controller_index_np)
-        self.robot_cmds.jnts_state.set(data=self._get_jnt_a_from_sol(node_idx=0), data_type="a", robot_idxs=self.controller_index_np)
-        self.robot_cmds.jnts_state.set(data=self._get_jnt_eff_from_sol(node_idx=0), data_type="eff", robot_idxs=self.controller_index_np)
-        self.robot_cmds.root_state.set(data=self._get_root_full_q_from_sol(node_idx=1), data_type="q_full", robot_idxs=self.controller_index_np)
-        self.robot_cmds.root_state.set(data=self._get_root_twist_from_sol(node_idx=1), data_type="twist", robot_idxs=self.controller_index_np)
-        self.robot_cmds.root_state.set(data=self._get_norm_grav_vector_from_sol(node_idx=0), data_type="gn", robot_idxs=self.controller_index_np)
+        self.robot_cmds.jnts_state.set(data=self._get_jnt_q_from_sol(node_idx=self._rhc_cmds_node_idx), data_type="q", robot_idxs=self.controller_index_np)
+        self.robot_cmds.jnts_state.set(data=self._get_jnt_v_from_sol(node_idx=self._rhc_cmds_node_idx), data_type="v", robot_idxs=self.controller_index_np)
+        self.robot_cmds.jnts_state.set(data=self._get_jnt_a_from_sol(node_idx=self._rhc_cmds_node_idx-1), data_type="a", robot_idxs=self.controller_index_np)
+        self.robot_cmds.jnts_state.set(data=self._get_jnt_eff_from_sol(node_idx=self._rhc_cmds_node_idx-1), data_type="eff", robot_idxs=self.controller_index_np)
+        self.robot_cmds.root_state.set(data=self._get_root_full_q_from_sol(node_idx=self._rhc_cmds_node_idx), data_type="q_full", robot_idxs=self.controller_index_np)
+        self.robot_cmds.root_state.set(data=self._get_root_twist_from_sol(node_idx=self._rhc_cmds_node_idx), data_type="twist", robot_idxs=self.controller_index_np)
+        self.robot_cmds.root_state.set(data=self._get_norm_grav_vector_from_sol(node_idx=self._rhc_cmds_node_idx-1), data_type="gn", robot_idxs=self.controller_index_np)
 
         f_contact = self._get_f_from_sol()
         if f_contact is not None:
             contact_names = self.robot_state.contact_names()
-            rhc_q_first_node=self._get_root_full_q_from_sol(node_idx=0)[:, 3:7]
+            node_idx_f_estimate=1
+            rhc_q_estimate=self._get_root_full_q_from_sol(node_idx=node_idx_f_estimate)[:, 3:7]
             for i in range(len(contact_names)):
                 contact = contact_names[i]
                 contact_idx = i*3
-                contact_force_world=f_contact[contact_idx:(contact_idx+3), 0:1].T
+                contact_force_world=f_contact[contact_idx:(contact_idx+3), node_idx_f_estimate:node_idx_f_estimate+1].T
                 world2base_frame(v_w=contact_force_world, 
-                    q_b=rhc_q_first_node, 
+                    q_b=rhc_q_estimate, 
                     v_out=self._contact_force_base_loc_aux,
                     is_q_wijk=False # horizon q is ijkw
                     )
