@@ -1017,6 +1017,10 @@ class RHController(ABC):
     @abstractmethod
     def _get_root_full_q_from_sol(self, node_idx=1) -> np.ndarray:
         pass
+    
+    @abstractmethod
+    def _get_full_q_from_sol(self, node_idx=1) -> np.ndarray:
+        pass
 
     @abstractmethod
     def _get_root_twist_from_sol(self, node_idx=1) -> np.ndarray:
