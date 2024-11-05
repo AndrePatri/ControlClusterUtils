@@ -211,7 +211,7 @@ class ControlClusterServer(ABC):
                             vlevel = self._vlevel,
                             fill_value=np.nan)
         self._rhc_status = RhcStatus(is_server=True,
-            n_nodes=40, # should be set to be able to fit the maximum horizon length in the whole cluster
+            n_nodes=51, # should be set to be able to fit the maximum horizon length in the whole cluster
             n_contacts=self._n_contacts,
             cluster_size=self.cluster_size,
             namespace=self._namespace, 
