@@ -770,17 +770,16 @@ class RHController(ABC):
         self.robot_cmds.root_state.set(data=self._get_root_full_q_from_sol(node_idx=self._rhc_cmds_node_idx), data_type="q_full", robot_idxs=self.controller_index_np)
         self.robot_cmds.root_state.set(data=self._get_root_twist_from_sol(node_idx=self._rhc_cmds_node_idx), data_type="twist", robot_idxs=self.controller_index_np)
         self.robot_cmds.root_state.set(data=self._get_norm_grav_vector_from_sol(node_idx=self._rhc_cmds_node_idx-1), data_type="gn", robot_idxs=self.controller_index_np)
-
         f_contact = self._get_f_from_sol()
         if f_contact is not None:
             contact_names = self.robot_state.contact_names()
-            node_idx_f_estimate=1
+            node_idx_f_estimate=self._rhc_cmds_node_idx-1 # we always write the force to reach the desired state (prev node) 
             rhc_q_estimate=self._get_root_full_q_from_sol(node_idx=node_idx_f_estimate)[:, 3:7]
             for i in range(len(contact_names)):
                 contact = contact_names[i]
                 contact_idx = i*3
-                contact_force_world=f_contact[contact_idx:(contact_idx+3), node_idx_f_estimate:node_idx_f_estimate+1].T
-                world2base_frame(v_w=contact_force_world, 
+                contact_force_rhc_world=f_contact[contact_idx:(contact_idx+3), node_idx_f_estimate:node_idx_f_estimate+1].T
+                world2base_frame(v_w=contact_force_rhc_world, 
                     q_b=rhc_q_estimate, 
                     v_out=self._contact_force_base_loc_aux,
                     is_q_wijk=False # horizon q is ijkw
@@ -797,15 +796,16 @@ class RHController(ABC):
         self.robot_pred.jnts_state.set(data=self._get_jnt_eff_from_sol(node_idx=self._pred_node_idx-1), data_type="eff", robot_idxs=self.controller_index_np)
         self.robot_pred.root_state.set(data=self._get_root_full_q_from_sol(node_idx=self._pred_node_idx), data_type="q_full", robot_idxs=self.controller_index_np)
         self.robot_pred.root_state.set(data=self._get_root_twist_from_sol(node_idx=self._pred_node_idx), data_type="twist", robot_idxs=self.controller_index_np)
+        self.robot_pred.root_state.set(data=self._get_norm_grav_vector_from_sol(node_idx=self._pred_node_idx-1), data_type="gn", robot_idxs=self.controller_index_np)
 
         # write robot commands
         self.robot_cmds.jnts_state.synch_retry(row_index=self.controller_index, col_index=0, n_rows=1, n_cols=self.robot_cmds.jnts_state.n_cols,
                                 read=False) # jnt state
-        self.robot_cmds.contact_wrenches.synch_retry(row_index=self.controller_index, col_index=0, n_rows=1, n_cols=self.robot_cmds.contact_wrenches.n_cols,
-                                read=False) # contact state
         self.robot_cmds.root_state.synch_retry(row_index=self.controller_index, col_index=0, n_rows=1, n_cols=self.robot_cmds.root_state.n_cols,
                                 read=False) # root state, in case it was written
-
+        self.robot_cmds.contact_wrenches.synch_retry(row_index=self.controller_index, col_index=0, n_rows=1, n_cols=self.robot_cmds.contact_wrenches.n_cols,
+                                read=False) # contact state
+        
         # write robot pred
         self.robot_pred.jnts_state.synch_retry(row_index=self.controller_index, col_index=0, n_rows=1, n_cols=self.robot_cmds.jnts_state.n_cols,
                                 read=False)
