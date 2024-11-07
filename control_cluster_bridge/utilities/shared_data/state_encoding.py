@@ -151,7 +151,7 @@ class JntsState(SharedTWrapper):
             if self._with_torch_view:
                 import torch
                 self._jnts_remapping = torch.tensor(jnts_remapping, dtype=torch.int64)
-                if self.with_gpu_mirror:
+                if self._with_gpu_mirror:
                     self._jnts_remapping_gpu = torch.tensor(jnts_remapping, dtype=torch.int64, device="cuda")
             else:
                 self._jnts_remapping = np.array(jnts_remapping, dtype=np.int64)
