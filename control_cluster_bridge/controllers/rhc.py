@@ -763,12 +763,15 @@ class RHController(ABC):
         # gets data from the solution and updates the view on the shared data
 
         # cmds for robot
+        # jnts
         self.robot_cmds.jnts_state.set(data=self._get_jnt_q_from_sol(node_idx=self._rhc_cmds_node_idx), data_type="q", robot_idxs=self.controller_index_np)
         self.robot_cmds.jnts_state.set(data=self._get_jnt_v_from_sol(node_idx=self._rhc_cmds_node_idx), data_type="v", robot_idxs=self.controller_index_np)
         self.robot_cmds.jnts_state.set(data=self._get_jnt_a_from_sol(node_idx=self._rhc_cmds_node_idx-1), data_type="a", robot_idxs=self.controller_index_np)
         self.robot_cmds.jnts_state.set(data=self._get_jnt_eff_from_sol(node_idx=self._rhc_cmds_node_idx-1), data_type="eff", robot_idxs=self.controller_index_np)
+        # root
         self.robot_cmds.root_state.set(data=self._get_root_full_q_from_sol(node_idx=self._rhc_cmds_node_idx), data_type="q_full", robot_idxs=self.controller_index_np)
         self.robot_cmds.root_state.set(data=self._get_root_twist_from_sol(node_idx=self._rhc_cmds_node_idx), data_type="twist", robot_idxs=self.controller_index_np)
+        self.robot_cmds.root_state.set(data=self._get_root_a_from_sol(node_idx=self._rhc_cmds_node_idx-1), data_type="a_full", robot_idxs=self.controller_index_np)
         self.robot_cmds.root_state.set(data=self._get_norm_grav_vector_from_sol(node_idx=self._rhc_cmds_node_idx-1), data_type="gn", robot_idxs=self.controller_index_np)
         f_contact = self._get_f_from_sol()
         if f_contact is not None:
@@ -796,6 +799,7 @@ class RHController(ABC):
         self.robot_pred.jnts_state.set(data=self._get_jnt_eff_from_sol(node_idx=self._pred_node_idx-1), data_type="eff", robot_idxs=self.controller_index_np)
         self.robot_pred.root_state.set(data=self._get_root_full_q_from_sol(node_idx=self._pred_node_idx), data_type="q_full", robot_idxs=self.controller_index_np)
         self.robot_pred.root_state.set(data=self._get_root_twist_from_sol(node_idx=self._pred_node_idx), data_type="twist", robot_idxs=self.controller_index_np)
+        self.robot_pred.root_state.set(data=self._get_root_a_from_sol(node_idx=self._pred_node_idx-1), data_type="a_full", robot_idxs=self.controller_index_np)
         self.robot_pred.root_state.set(data=self._get_norm_grav_vector_from_sol(node_idx=self._pred_node_idx-1), data_type="gn", robot_idxs=self.controller_index_np)
 
         # write robot commands
@@ -1007,11 +1011,11 @@ class RHController(ABC):
         pass
     
     @abstractmethod
-    def _get_jnt_a_from_sol(self, node_idx=1) -> np.ndarray:
+    def _get_jnt_a_from_sol(self, node_idx=0) -> np.ndarray:
         pass
 
     @abstractmethod
-    def _get_jnt_eff_from_sol(self, node_idx=1) -> np.ndarray:
+    def _get_jnt_eff_from_sol(self, node_idx=0) -> np.ndarray:
         pass
     
     @abstractmethod
@@ -1026,6 +1030,10 @@ class RHController(ABC):
     def _get_root_twist_from_sol(self, node_idx=1) -> np.ndarray:
         pass
     
+    @abstractmethod
+    def _get_root_a_from_sol(self, node_idx=0) -> np.ndarray:
+        pass
+
     def _get_norm_grav_vector_from_sol(self, node_idx=1) -> np.ndarray:
         rhc_q=self._get_root_full_q_from_sol(node_idx=node_idx)[:, 3:7]
         world2base_frame(v_w=self._norm_grav_vector_w,q_b=rhc_q,v_out=self._norm_grav_vector_base_loc,

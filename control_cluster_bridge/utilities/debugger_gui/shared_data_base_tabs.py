@@ -34,7 +34,7 @@ class FullRobStateWindow(SharedDataWindow):
         super().__init__(update_data_dt = update_data_dt,
             update_plot_dt = update_plot_dt,
             window_duration = window_duration,
-            grid_n_rows = 6,
+            grid_n_rows = 7,
             grid_n_cols = 2,
             window_buffer_factor = window_buffer_factor,
             namespace = namespace,
@@ -87,6 +87,28 @@ class FullRobStateWindow(SharedDataWindow):
                     window_buffer_factor=self.window_buffer_factor, 
                     legend_list=["omega_x", "omega_y", "omega_z"], 
                     ylabel="[rad/s]"))
+        
+        self.rt_plotters.append(RtPlotWindow(data_dim=self.shared_data_clients[0].root_state.get(data_type="a").shape[1],
+                    n_data = 1,
+                    update_data_dt=self.update_data_dt, 
+                    update_plot_dt=self.update_plot_dt, 
+                    window_duration=self.window_duration, 
+                    parent=None, 
+                    base_name="Base linear acc.", 
+                    window_buffer_factor=self.window_buffer_factor, 
+                    legend_list=["a_x", "a_y", "a_z"], 
+                    ylabel="[m/s^2]"))
+        
+        self.rt_plotters.append(RtPlotWindow(data_dim=self.shared_data_clients[0].root_state.get(data_type="alpha").shape[1],
+                    n_data = 1, 
+                    update_data_dt=self.update_data_dt, 
+                    update_plot_dt=self.update_plot_dt, 
+                    window_duration=self.window_duration, 
+                    parent=None, 
+                    base_name="Base angular acc.",
+                    window_buffer_factor=self.window_buffer_factor, 
+                    legend_list=["a_x", "a_y", "a_z"], 
+                    ylabel="[rad/s^2]"))
         
         self.rt_plotters.append(RtPlotWindow(data_dim=self.shared_data_clients[0].n_jnts(),
                     n_data = 1,
@@ -217,22 +239,24 @@ class FullRobStateWindow(SharedDataWindow):
         self.grid.addFrame(self.rt_plotters[1].base_frame, 0, 1)
         self.grid.addFrame(self.rt_plotters[2].base_frame, 1, 0)
         self.grid.addFrame(self.rt_plotters[3].base_frame, 1, 1)
-        
-        # joint state
         self.grid.addFrame(self.rt_plotters[4].base_frame, 2, 0)
         self.grid.addFrame(self.rt_plotters[5].base_frame, 2, 1)
+
+        # joint state
         self.grid.addFrame(self.rt_plotters[6].base_frame, 3, 0)
         self.grid.addFrame(self.rt_plotters[7].base_frame, 3, 1)
-
-        # contact state
         self.grid.addFrame(self.rt_plotters[8].base_frame, 4, 0)
-
-        # gravity vector
         self.grid.addFrame(self.rt_plotters[9].base_frame, 4, 1)
 
-        # contact pos e vel
+        # contact state
         self.grid.addFrame(self.rt_plotters[10].base_frame, 5, 0)
+
+        # gravity vector
         self.grid.addFrame(self.rt_plotters[11].base_frame, 5, 1)
+
+        # contact pos e vel
+        self.grid.addFrame(self.rt_plotters[12].base_frame, 6, 0)
+        self.grid.addFrame(self.rt_plotters[13].base_frame, 6, 1)
 
     def _init_shared_data(self):
         
@@ -257,22 +281,24 @@ class FullRobStateWindow(SharedDataWindow):
             self.rt_plotters[1].rt_plot_widget.update(self.shared_data_clients[0].root_state.get(data_type="q", robot_idxs=np_idx).flatten())
             self.rt_plotters[2].rt_plot_widget.update(self.shared_data_clients[0].root_state.get(data_type="v", robot_idxs=np_idx).flatten())
             self.rt_plotters[3].rt_plot_widget.update(self.shared_data_clients[0].root_state.get(data_type="omega", robot_idxs=np_idx).flatten())
+            self.rt_plotters[4].rt_plot_widget.update(self.shared_data_clients[0].root_state.get(data_type="a", robot_idxs=np_idx).flatten())
+            self.rt_plotters[5].rt_plot_widget.update(self.shared_data_clients[0].root_state.get(data_type="alpha", robot_idxs=np_idx).flatten())
 
             # joint state
-            self.rt_plotters[4].rt_plot_widget.update(self.shared_data_clients[0].jnts_state.get(data_type="q",robot_idxs=np_idx).flatten())
-            self.rt_plotters[5].rt_plot_widget.update(self.shared_data_clients[0].jnts_state.get(data_type="v",robot_idxs=np_idx).flatten())
-            self.rt_plotters[6].rt_plot_widget.update(self.shared_data_clients[0].jnts_state.get(data_type="a",robot_idxs=np_idx).flatten())
-            self.rt_plotters[7].rt_plot_widget.update(self.shared_data_clients[0].jnts_state.get(data_type="eff",robot_idxs=np_idx).flatten())
+            self.rt_plotters[6].rt_plot_widget.update(self.shared_data_clients[0].jnts_state.get(data_type="q",robot_idxs=np_idx).flatten())
+            self.rt_plotters[7].rt_plot_widget.update(self.shared_data_clients[0].jnts_state.get(data_type="v",robot_idxs=np_idx).flatten())
+            self.rt_plotters[8].rt_plot_widget.update(self.shared_data_clients[0].jnts_state.get(data_type="a",robot_idxs=np_idx).flatten())
+            self.rt_plotters[9].rt_plot_widget.update(self.shared_data_clients[0].jnts_state.get(data_type="eff",robot_idxs=np_idx).flatten())
 
             # contact state
-            self.rt_plotters[8].rt_plot_widget.update(self.shared_data_clients[0].contact_wrenches.get(data_type="w", robot_idxs=np_idx).flatten())
+            self.rt_plotters[10].rt_plot_widget.update(self.shared_data_clients[0].contact_wrenches.get(data_type="w", robot_idxs=np_idx).flatten())
 
             # norm. gravity 
-            self.rt_plotters[9].rt_plot_widget.update(self.shared_data_clients[0].root_state.get(data_type="gn", robot_idxs=np_idx).flatten())
+            self.rt_plotters[11].rt_plot_widget.update(self.shared_data_clients[0].root_state.get(data_type="gn", robot_idxs=np_idx).flatten())
 
             # contact_pos e vel
-            self.rt_plotters[10].rt_plot_widget.update(self.shared_data_clients[0].contact_pos.get(data_type="p", robot_idxs=np_idx).flatten())
-            self.rt_plotters[11].rt_plot_widget.update(self.shared_data_clients[0].contact_vel.get(data_type="v", robot_idxs=np_idx).flatten())
+            self.rt_plotters[12].rt_plot_widget.update(self.shared_data_clients[0].contact_pos.get(data_type="p", robot_idxs=np_idx).flatten())
+            self.rt_plotters[13].rt_plot_widget.update(self.shared_data_clients[0].contact_vel.get(data_type="v", robot_idxs=np_idx).flatten())
 
 class RobotStates(FullRobStateWindow):
 
