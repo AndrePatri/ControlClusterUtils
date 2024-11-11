@@ -279,7 +279,7 @@ class RootState(SharedTWrapper):
         
         basename = "RootState" 
         
-        n_cols = 16 # p, q, v, omega, normalized gravityt
+        n_cols = 22 # p, q, v, omega, lin. acc, ang. acc., normalized gravity
 
         self.n_robots = n_robots
 
@@ -308,21 +308,32 @@ class RootState(SharedTWrapper):
         # views of the underlying memory view of the 
         # actual shared memory (crazy, eh?)
 
-        # root
+        # cpu
         self._p = None
         self._q = None
         self._v = None
         self._omega = None
+        self._a = None
+        self._alpha = None
+
         self._q_full = None # full root configuration (pos + quaternion)
         self._twist = None # full root velocity (lin. + angular)
+        self._a_full = None
+
         self._gn = None
 
+        # gpu 
         self._p_gpu = None
         self._q_gpu = None
         self._v_gpu = None
         self._omega_gpu = None
+        self._a_gpu = None
+        self._alpha_gpu = None
+
         self._q_full_gpu = None
         self._twist_gpu = None 
+        self._a_full_gpu = None
+
         self._gn_gpu = None
         
     def run(self,
@@ -377,7 +388,11 @@ class RootState(SharedTWrapper):
             self._omega = self.get_torch_mirror()[:, 10:13].view(self.n_robots, 3)
             self._twist = self.get_torch_mirror()[:, 7:13].view(self.n_robots, 6)
 
-            self._gn = self.get_torch_mirror()[:, 13:16].view(self.n_robots, 3)
+            self._a = self.get_torch_mirror()[:, 13:16].view(self.n_robots, 3)
+            self._alpha = self.get_torch_mirror()[:, 16:19].view(self.n_robots, 3)
+            self._a_full = self.get_torch_mirror()[:, 13:19].view(self.n_robots, 6)
+
+            self._gn = self.get_torch_mirror()[:, 19:22].view(self.n_robots, 3)
         else:
             self._p = self.get_numpy_mirror()[:, 0:3].view()
             self._q = self.get_numpy_mirror()[:, 3:7].view()
@@ -387,7 +402,11 @@ class RootState(SharedTWrapper):
             self._omega = self.get_numpy_mirror()[:, 10:13].view()
             self._twist = self.get_numpy_mirror()[:, 7:13].view()
 
-            self._gn = self.get_numpy_mirror()[:, 13:16].view()
+            self._a = self.get_numpy_mirror()[:, 13:16].view()
+            self._alpha = self.get_numpy_mirror()[:, 16:19].view()
+            self._a_full = self.get_numpy_mirror()[:, 13:19].view()
+
+            self._gn = self.get_numpy_mirror()[:, 19:22].view()
 
         if self.gpu_mirror_exists():
 
@@ -400,7 +419,11 @@ class RootState(SharedTWrapper):
             self._omega_gpu = self._gpu_mirror[:, 10:13].view(self.n_robots, 3)
             self._twist_gpu = self._gpu_mirror[:, 7:13].view(self.n_robots, 6)
 
-            self._gn_gpu = self._gpu_mirror[:, 13:16].view(self.n_robots, 3)
+            self._a_gpu = self._gpu_mirror[:, 13:16].view(self.n_robots, 3)
+            self._alpha_gpu = self._gpu_mirror[:, 16:19].view(self.n_robots, 3)
+            self._a_full_gpu = self._gpu_mirror[:, 13:19].view(self.n_robots, 6)
+
+            self._gn_gpu = self._gpu_mirror[:, 19:22].view(self.n_robots, 3)
     
     def _retrieve_data(self,
                 name: str,
@@ -419,6 +442,12 @@ class RootState(SharedTWrapper):
                 return self._omega, None
             elif name == "twist":
                 return self._twist, None
+            elif name == "a":
+                return self._a, None
+            elif name == "alpha":
+                return self._alpha, None
+            elif name == "a_full":
+                return self._a_full, None
             elif name == "gn":
                 return self._gn, None
             else:
@@ -436,6 +465,12 @@ class RootState(SharedTWrapper):
                 return self._omega_gpu, None
             elif name == "twist":
                 return self._twist_gpu, None
+            elif name == "a":
+                return self._a_gpu, None
+            elif name == "alpha":
+                return self._alpha_gpu, None
+            elif name == "a_full":
+                return self._a_full_gpu, None
             elif name == "gn":
                 return self._gn_gpu, None
             else:
