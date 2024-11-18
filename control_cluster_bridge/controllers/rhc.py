@@ -903,9 +903,9 @@ class RHController(ABC):
         return 0.0
     
     def _get_failure_index(self):
-        fail_idx=self._get_fail_idx()
-        if fail_idx>self._fail_idx_thresh:
-            fail_idx=self._fail_idx_thresh 
+        fail_idx=self._get_fail_idx()/self._fail_idx_thresh
+        if fail_idx>1.0:
+            fail_idx=1.0
         return fail_idx
     
     def _check_rhc_failure(self):
