@@ -787,7 +787,7 @@ class RHController(ABC):
                     v_out=self._contact_force_base_loc_aux,
                     is_q_wijk=False # horizon q is ijkw
                     )
-                self.robot_cmds.contact_wrenches.set(data=self._contact_force_base_loc_aux/self._contact_f_scale, 
+                self.robot_cmds.contact_wrenches.set(data=np.clip(self._contact_force_base_loc_aux/self._contact_f_scale, a_min=-1e3, a_max=1e3), 
                     data_type="f", 
                     robot_idxs=self.controller_index_np,
                     contact_name=contact)
