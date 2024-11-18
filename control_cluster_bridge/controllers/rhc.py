@@ -789,7 +789,7 @@ class RHController(ABC):
                     )
                 self._contact_force_base_loc_aux[:, :]=np.nan_to_num(self._contact_force_base_loc_aux/self._contact_f_scale,
                                                             nan=1e3,
-                                                            posinf=-1e3, neginf=1e3) # ensure finiteness
+                                                            posinf=1e3, neginf=-1e3) # ensure finiteness
                 np.clip(self._contact_force_base_loc_aux, out=self._contact_force_base_loc_aux, a_min=-1e3, a_max=1e3) # in place clipping
                 self.robot_cmds.contact_wrenches.set(data=np.clip(self._contact_force_base_loc_aux/self._contact_f_scale, a_min=-1e3, a_max=1e3), 
                     data_type="f", 
