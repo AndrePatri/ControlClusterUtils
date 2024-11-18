@@ -835,16 +835,6 @@ class RHController(ABC):
         self.rhc_status.rhc_fail_idx.write_retry(self._get_failure_index(), 
                                         row_index=self.controller_index,
                                         col_index=0) # write idx  on shared mem
-        
-        if f_contact is not None:
-            for i in range(self.rhc_status.n_contacts):
-                contact_idx = i*3
-                contact_f=f_contact[contact_idx:(contact_idx+3), :]/(self._contact_f_scale)
-                np.clip(contact_f, out=contact_f, 
-                a_min=-self._contact_f_thresh, a_max=self._contact_f_thresh) # safety clamp
-                self.rhc_status.rhc_fcn.write_retry(data=contact_f.T.reshape(1, -1), 
-                    row_index=self.controller_index, 
-                    col_index=i*3*self.rhc_status.n_nodes)
 
     def _assign_controller_side_jnt_names(self, 
                         jnt_names: List[str]):
