@@ -69,6 +69,9 @@ class RHController(ABC):
         self._verbose = verbose
         self._debug = debug
 
+        if self._debug:
+            np.seterr(over='ignore')
+            
         self._n_nodes = n_nodes
         self._dt = dt
         self._n_intervals = self._n_nodes - 1 
