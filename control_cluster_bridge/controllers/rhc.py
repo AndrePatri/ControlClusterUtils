@@ -904,7 +904,7 @@ class RHController(ABC):
     def _check_rhc_failure(self):
         # we use fail idx viol to detect failures
         idx = self._get_failure_index()
-        return idx>=self._fail_idx_thresh
+        return idx>=1.0
     
     def _update_rhc_internal(self):
         # data which is not enabled in the config is not actually 
