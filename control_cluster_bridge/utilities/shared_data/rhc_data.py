@@ -366,7 +366,35 @@ class RhcRefs(SharedDataBase):
                     return internal_data[robot_idxs, :]
                 else:
                     return internal_data[robot_idxs, contact_idx]
-                
+
+    class AlphaView(SharedTWrapper):
+        
+        def __init__(self,
+                namespace = "",
+                is_server = False, 
+                cluster_size: int = -1, 
+                verbose: bool = False, 
+                vlevel: VLevel = VLevel.V0,
+                force_reconnection: bool = False,
+                with_gpu_mirror: bool = False,
+                with_torch_view: bool = False):
+            
+            basename = "Alpha" # hardcoded
+
+            super().__init__(namespace = namespace,
+                basename = basename,
+                is_server = is_server, 
+                n_rows = cluster_size, 
+                n_cols = 1, 
+                verbose = verbose, 
+                vlevel = vlevel,
+                safe = False, # boolean operations are atomdic on 64 bit systems
+                dtype=dtype.Float,
+                force_reconnection=force_reconnection,
+                with_gpu_mirror=with_gpu_mirror,
+                with_torch_view=with_torch_view,
+                fill_value = 0.0)
+            
     def __init__(self,
                 namespace: str,
                 is_server: bool,
@@ -431,6 +459,15 @@ class RhcRefs(SharedDataBase):
                             with_torch_view=with_torch_view,
                             safe=safe)
         
+        self.alpha = self.AlphaView(namespace=namespace, 
+                                is_server=is_server, 
+                                cluster_size=n_robots, 
+                                verbose=verbose, 
+                                vlevel=vlevel,
+                                force_reconnection=force_reconnection,
+                                with_gpu_mirror=with_gpu_mirror,
+                                with_torch_view=with_torch_view)
+        
         self.contact_flags = None
 
         self._is_runnning = False
@@ -447,12 +484,14 @@ class RhcRefs(SharedDataBase):
         return self.rob_refs.get_shared_mem() + [
             self.phase_id.get_shared_mem(),
             self.contact_flags.get_shared_mem(),
-            self.flight_info.get_shared_mem()]
+            self.flight_info.get_shared_mem(),
+            self.alpha.get_shared_mem()]
     
     def run(self):
 
         self.rob_refs.run()
         self.phase_id.run()
+        self.alpha.run()
 
         self._n_contacts = self.rob_refs.n_contacts()
         
@@ -496,6 +535,7 @@ class RhcRefs(SharedDataBase):
             self.phase_id.close()
             self.flight_info.close()
             self.contact_flags.close()
+            self.alpha.close()
 
             self._is_runnning = False
 
@@ -1265,7 +1305,7 @@ class RhcStatus(SharedDataBase):
                                 force_reconnection=self.force_reconnection,
                                 with_gpu_mirror=self.with_gpu_mirror,
                                 with_torch_view=self.with_torch_view)
-        
+
     def run(self):
                 
         self.rhc_static_info.run()
@@ -1310,7 +1350,7 @@ class RhcStatus(SharedDataBase):
             self.rhc_fcn.close()
             self.rhc_fail_idx.close()
             self.rhc_static_info.close()
-
+            
             self._is_runnning = False
 
 class RhcInternal(SharedDataBase):
