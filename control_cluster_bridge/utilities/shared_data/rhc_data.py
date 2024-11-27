@@ -127,7 +127,45 @@ class RhcPred(FullRobState):
             verbose=verbose,
             vlevel=vlevel,
             fill_value=fill_value)
-     
+
+class RhcPredDelta(FullRobState):
+
+    def __init__(self,
+            namespace: str,
+            is_server: bool,
+            n_robots: int = None,
+            n_jnts: int = None,
+            n_contacts: int = 1,
+            jnt_names: List[str] = None,
+            contact_names: List[str] = None,
+            q_remapping: List[int] = None,
+            with_gpu_mirror: bool = False,
+            with_torch_view: bool = False,
+            force_reconnection: bool = False,
+            safe: bool = True,
+            verbose: bool = False,
+            vlevel: VLevel = VLevel.V1,
+            fill_value=0):
+
+        basename = "RhcPredictionDelta"
+
+        super().__init__(namespace=namespace,
+            basename=basename,
+            is_server=is_server,
+            n_robots=n_robots,
+            n_jnts=n_jnts,
+            n_contacts=n_contacts,
+            jnt_names=jnt_names,
+            contact_names=contact_names,
+            q_remapping=q_remapping,
+            with_gpu_mirror=with_gpu_mirror,
+            with_torch_view=with_torch_view,
+            force_reconnection=force_reconnection,
+            safe=safe,
+            verbose=verbose,
+            vlevel=vlevel,
+            fill_value=fill_value)
+        
 class RhcRefs(SharedDataBase):
     
     class RobotFullConfigRef(FullRobState):
@@ -394,6 +432,34 @@ class RhcRefs(SharedDataBase):
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
                 fill_value = 0.0)
+    
+    class BoundRelaxView(SharedTWrapper):
+        
+        def __init__(self,
+                namespace = "",
+                is_server = False, 
+                cluster_size: int = -1, 
+                verbose: bool = False, 
+                vlevel: VLevel = VLevel.V0,
+                force_reconnection: bool = False,
+                with_gpu_mirror: bool = False,
+                with_torch_view: bool = False):
+            
+            basename = "BoundRelax" # hardcoded
+
+            super().__init__(namespace = namespace,
+                basename = basename,
+                is_server = is_server, 
+                n_rows = cluster_size, 
+                n_cols = 1, 
+                verbose = verbose, 
+                vlevel = vlevel,
+                safe = False, # boolean operations are atomdic on 64 bit systems
+                dtype=dtype.Float,
+                force_reconnection=force_reconnection,
+                with_gpu_mirror=with_gpu_mirror,
+                with_torch_view=with_torch_view,
+                fill_value = 0.0)
             
     def __init__(self,
                 namespace: str,
@@ -468,6 +534,15 @@ class RhcRefs(SharedDataBase):
                                 with_gpu_mirror=with_gpu_mirror,
                                 with_torch_view=with_torch_view)
         
+        self.bound_rel = self.BoundRelaxView(namespace=namespace, 
+                                is_server=is_server, 
+                                cluster_size=n_robots, 
+                                verbose=verbose, 
+                                vlevel=vlevel,
+                                force_reconnection=force_reconnection,
+                                with_gpu_mirror=with_gpu_mirror,
+                                with_torch_view=with_torch_view)
+        
         self.contact_flags = None
 
         self._is_runnning = False
@@ -485,13 +560,15 @@ class RhcRefs(SharedDataBase):
             self.phase_id.get_shared_mem(),
             self.contact_flags.get_shared_mem(),
             self.flight_info.get_shared_mem(),
-            self.alpha.get_shared_mem()]
+            self.alpha.get_shared_mem(),
+            self.bound_rel.get_shared_mem()]
     
     def run(self):
 
         self.rob_refs.run()
         self.phase_id.run()
         self.alpha.run()
+        self.bound_rel.run()
 
         self._n_contacts = self.rob_refs.n_contacts()
         
@@ -536,6 +613,7 @@ class RhcRefs(SharedDataBase):
             self.flight_info.close()
             self.contact_flags.close()
             self.alpha.close()
+            self.bound_rel.close()
 
             self._is_runnning = False
 

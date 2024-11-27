@@ -24,7 +24,7 @@ import time
 import numpy as np
 
 from control_cluster_bridge.utilities.shared_data.rhc_data import RobotState
-from control_cluster_bridge.utilities.shared_data.rhc_data import RhcCmds, RhcPred
+from control_cluster_bridge.utilities.shared_data.rhc_data import RhcCmds, RhcPred, RhcPredDelta
 from control_cluster_bridge.utilities.shared_data.rhc_data import RhcStatus
 from control_cluster_bridge.utilities.shared_data.rhc_data import RhcInternal
 from control_cluster_bridge.utilities.shared_data.cluster_profiling import RhcProfiling
@@ -106,6 +106,7 @@ class RHController(ABC):
         self.cluster_stats = None
         self.robot_cmds = None
         self.robot_pred = None
+        self.rhc_pred_delta = None
         self.rhc_refs = None
         self._remote_triggerer = None
         self._remote_triggerer_timeout = timeout_ms # [ms]
@@ -194,6 +195,8 @@ class RHController(ABC):
                 self.robot_cmds.close()
             if self.robot_pred is not None:
                 self.robot_pred.close()
+            if self.rhc_pred_delta is not None:
+                self.rhc_pred_delta.close()
             if self.robot_state is not None:
                 self.robot_state.close()
             if self.rhc_status is not None:
@@ -252,7 +255,16 @@ class RHController(ABC):
                                 verbose=self._verbose,
                                 vlevel=VLevel.V2)
         self.robot_pred.run()
-    
+        self.rhc_pred_delta = RhcPredDelta(namespace=self.namespace,
+                                is_server=False,
+                                q_remapping=quat_remap, # remapping from environment to controller
+                                with_gpu_mirror=False,
+                                with_torch_view=False, 
+                                safe=False,
+                                verbose=self._verbose,
+                                vlevel=VLevel.V2)
+        self.rhc_pred_delta.run()
+
     def _rhc(self):
         if self._debug:
             self._rhc_db()
@@ -266,6 +278,9 @@ class RHController(ABC):
 
         self.robot_state.synch_from_shared_mem() # updates robot state with
         # latest data on shared mem
+
+        self._compute_pred_delta()
+
         if not self.failed():
             # we can solve only if not in failure state
             self._failed = not self._solve() # solve actual TO
@@ -308,6 +323,9 @@ class RHController(ABC):
 
         self.robot_state.synch_from_shared_mem() # updates robot state with
         # latest data on shared mem
+
+        self._compute_pred_delta()
+
         if not self.failed():
             # we can solve only if not in failure state
             self._failed = not self._solve() # solve actual TO
@@ -402,6 +420,7 @@ class RHController(ABC):
         self.robot_state.set_jnts_remapping(jnts_remapping=self._to_controller)
         self.robot_cmds.set_jnts_remapping(jnts_remapping=self._to_controller)
         self.robot_pred.set_jnts_remapping(jnts_remapping=self._to_controller)
+        self.rhc_pred_delta.set_jnts_remapping(jnts_remapping=self._to_controller)
 
         return True
 
@@ -839,6 +858,13 @@ class RHController(ABC):
                                         row_index=self.controller_index,
                                         col_index=0) # write idx  on shared mem
 
+    def _compute_pred_delta(self):
+        # to be overriden by child (should write into self.rhc_pred_delta)
+        # compute errors between the rhc prediction and the 
+        # measurements. Can be useful to debug errors in measurements 
+        # and also develop correcting/estimation techniques
+        pass
+    
     def _assign_controller_side_jnt_names(self, 
                         jnt_names: List[str]):
 

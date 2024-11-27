@@ -19,7 +19,7 @@
 from abc import ABC
 
 from control_cluster_bridge.utilities.shared_data.rhc_data import RobotState 
-from control_cluster_bridge.utilities.shared_data.rhc_data import RhcCmds, RhcPred
+from control_cluster_bridge.utilities.shared_data.rhc_data import RhcCmds, RhcPred, RhcPredDelta
 from control_cluster_bridge.utilities.shared_data.rhc_data import RhcStatus
 from control_cluster_bridge.utilities.shared_data.rhc_data import RhcRefs
 from control_cluster_bridge.utilities.shared_data.cluster_profiling import RhcProfiling
@@ -76,6 +76,7 @@ class ControlClusterServer(ABC):
         self._robot_states = None
         self._rhc_cmds = None
         self._rhc_pred = None
+        self._rhc_pred_delta = None
         self._rhc_refs = None
         self._rhc_status = None
         self._cluster_stats = None 
@@ -195,6 +196,19 @@ class ControlClusterServer(ABC):
                                 verbose=True,
                                 vlevel=self._vlevel,
                                 safe=False)
+        self._rhc_pred_delta=RhcPredDelta(namespace=self._namespace,
+                                is_server=True,
+                                n_robots=self.cluster_size,
+                                n_jnts=self.n_dofs,
+                                n_contacts=self._n_contacts,
+                                jnt_names=self.jnt_names,
+                                contact_names=self._contact_linknames,
+                                with_gpu_mirror=self._using_gpu,
+                                with_torch_view=True,
+                                force_reconnection=self._force_reconnection,
+                                verbose=True,
+                                vlevel=self._vlevel,
+                                safe=False)
 
         self._rhc_refs = RhcRefs(namespace=self._namespace,
                             is_server=True,
@@ -240,6 +254,7 @@ class ControlClusterServer(ABC):
         self._robot_states.run()
         self._rhc_cmds.run()
         self._rhc_pred.run()
+        self._rhc_pred_delta.run()
         self._rhc_refs.run()
         self._rhc_status.run()
         self._cluster_stats.run()          
@@ -254,6 +269,8 @@ class ControlClusterServer(ABC):
                 self._rhc_cmds.close()
             if self._rhc_pred is not None:
                 self._rhc_pred.close()
+            if self._rhc_pred_delta is not None:
+                self._rhc_pred_delta.close()
             if self._rhc_refs is not None:
                 self._rhc_refs.close()
             if self._rhc_status is not None:
