@@ -1,11 +1,11 @@
-from SharsorIPCpp.PySharsorIPC import dtype
+from EigenIPC.PyEigenIPC import dtype
 
 from SharsorIPCpp.PySharsor.wrappers.shared_data_view import SharedTWrapper
 from SharsorIPCpp.PySharsor.wrappers.shared_tensor_dict import SharedTensorDict
-from SharsorIPCpp.PySharsorIPC import VLevel
-from SharsorIPCpp.PySharsorIPC import LogType
-from SharsorIPCpp.PySharsorIPC import Journal
-from SharsorIPCpp.PySharsorIPC import StringTensorServer, StringTensorClient
+from EigenIPC.PyEigenIPC import VLevel
+from EigenIPC.PyEigenIPC import LogType
+from EigenIPC.PyEigenIPC import Journal
+from EigenIPC.PyEigenIPC import StringTensorServer, StringTensorClient
 
 from control_cluster_bridge.utilities.shared_data.abstractions import SharedDataBase
 from control_cluster_bridge.utilities.shared_data.state_encoding import FullRobState

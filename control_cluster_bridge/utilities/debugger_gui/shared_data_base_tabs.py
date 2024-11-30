@@ -10,7 +10,7 @@ from control_cluster_bridge.utilities.shared_data.sim_data import SharedEnvInfo
 from control_cluster_bridge.utilities.shared_data.cluster_profiling import RhcProfiling
 from control_cluster_bridge.utilities.shared_data.rhc_data import RhcRefs
 
-from SharsorIPCpp.PySharsorIPC import VLevel
+from EigenIPC.PyEigenIPC import VLevel
 
 from control_cluster_bridge.utilities.debugger_gui.plot_utils import WidgetUtils
 

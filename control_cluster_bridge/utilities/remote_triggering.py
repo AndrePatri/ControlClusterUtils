@@ -1,5 +1,5 @@
-from SharsorIPCpp.PySharsorIPC import VLevel
-from SharsorIPCpp.PySharsorIPC import Producer, Consumer
+from EigenIPC.PyEigenIPC import VLevel
+from EigenIPC.PyEigenIPC import Producer, Consumer
 
 
 class RemoteTriggererSrvr(Producer):

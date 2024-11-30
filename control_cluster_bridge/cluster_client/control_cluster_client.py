@@ -21,8 +21,8 @@ from typing import List, Dict
 
 import multiprocess as mp
 
-from SharsorIPCpp.PySharsorIPC import Journal, LogType
-from SharsorIPCpp.PySharsorIPC import VLevel
+from EigenIPC.PyEigenIPC import Journal, LogType
+from EigenIPC.PyEigenIPC import VLevel
 
 import signal
 
@@ -148,7 +148,7 @@ class ControlClusterClient(ABC):
         #     self._set_affinity(core_idxs=available_cores,
         #                 controller_idx=idx)
 
-        from SharsorIPCpp.PySharsorIPC import StringTensorClient
+        from EigenIPC.PyEigenIPC import StringTensorClient
         from perf_sleep.pyperfsleep import PerfSleep
         shared_rhc_files = StringTensorClient(
             basename="SharedRhcFilesDropDir", 
@@ -218,7 +218,7 @@ class ControlClusterClient(ABC):
     def run(self):
         
         # let's make the paths to the controllers files available on shared memory for db
-        from SharsorIPCpp.PySharsorIPC import StringTensorServer
+        from EigenIPC.PyEigenIPC import StringTensorServer
         from perf_sleep.pyperfsleep import PerfSleep
 
         shared_rhc_files = StringTensorServer(length=self.cluster_size, 
@@ -235,7 +235,7 @@ class ControlClusterClient(ABC):
         from control_cluster_bridge.utilities.shared_data.cluster_data import SharedClusterInfo
 
         from SharsorIPCpp.PySharsor.wrappers.shared_data_view import SharedTWrapper
-        from SharsorIPCpp.PySharsorIPC import dtype
+        from EigenIPC.PyEigenIPC import dtype
 
         self._remote_term = SharedTWrapper(namespace=self._namespace,
             basename="RemoteTermination",

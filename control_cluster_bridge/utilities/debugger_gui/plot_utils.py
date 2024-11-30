@@ -30,8 +30,8 @@ from typing import List, Callable, Union
 
 from control_cluster_bridge.utilities.sysutils import PathsGetter
 
-from SharsorIPCpp.PySharsorIPC import LogType
-from SharsorIPCpp.PySharsorIPC import Journal
+from EigenIPC.PyEigenIPC import LogType
+from EigenIPC.PyEigenIPC import Journal
 
 import os
 

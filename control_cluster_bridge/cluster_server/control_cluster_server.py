@@ -25,7 +25,7 @@ from control_cluster_bridge.utilities.shared_data.rhc_data import RhcRefs
 from control_cluster_bridge.utilities.shared_data.cluster_profiling import RhcProfiling
 from control_cluster_bridge.utilities.remote_triggering import RemoteTriggererSrvr
 
-from SharsorIPCpp.PySharsorIPC import VLevel, Journal, LogType
+from EigenIPC.PyEigenIPC import VLevel, Journal, LogType
 
 import time
 

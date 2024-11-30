@@ -34,10 +34,10 @@ from control_cluster_bridge.utilities.homing import RobotHomer
 
 from control_cluster_bridge.utilities.math_utils import world2base_frame
 
-from SharsorIPCpp.PySharsorIPC import VLevel
-from SharsorIPCpp.PySharsorIPC import Journal, LogType
+from EigenIPC.PyEigenIPC import VLevel
+from EigenIPC.PyEigenIPC import Journal, LogType
 from SharsorIPCpp.PySharsor.wrappers.shared_data_view import SharedTWrapper
-from SharsorIPCpp.PySharsorIPC import dtype
+from EigenIPC.PyEigenIPC import dtype
 
 from typing import List
 # from typing import TypeVar, Union

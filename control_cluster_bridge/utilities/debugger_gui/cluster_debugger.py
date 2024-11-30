@@ -20,7 +20,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QSplitter, QFrame, QScrollArea
 from PyQt5.QtWidgets import QSpacerItem, QSizePolicy
 
-from SharsorIPCpp.PySharsorIPC import VLevel
+from EigenIPC.PyEigenIPC import VLevel
 
 from control_cluster_bridge.utilities.debugger_gui.shared_data_base_tabs import RHCRefs
 from control_cluster_bridge.utilities.debugger_gui.shared_data_base_tabs import RHCmds, RHCPred, RHCPredDelta
@@ -30,10 +30,10 @@ from control_cluster_bridge.utilities.debugger_gui.shared_data_base_tabs import 
 from control_cluster_bridge.utilities.debugger_gui.shared_data_base_tabs import RHCProfiling
 from control_cluster_bridge.utilities.debugger_gui.shared_data_base_tabs import RHCStatus
 
-from SharsorIPCpp.PySharsorIPC import dtype
+from EigenIPC.PyEigenIPC import dtype
 from SharsorIPCpp.PySharsor.wrappers.shared_data_view import SharedTWrapper
-from SharsorIPCpp.PySharsorIPC import VLevel
-from SharsorIPCpp.PySharsorIPC import Journal
+from EigenIPC.PyEigenIPC import VLevel
+from EigenIPC.PyEigenIPC import Journal
 
 from control_cluster_bridge.utilities.shared_data.rhc_data import RhcStatus
 

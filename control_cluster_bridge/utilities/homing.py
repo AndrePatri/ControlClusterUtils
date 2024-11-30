@@ -20,7 +20,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 
 from typing import List
-from SharsorIPCpp.PySharsorIPC import Journal, LogType
+from EigenIPC.PyEigenIPC import Journal, LogType
 
 class RobotHomer:
 

@@ -182,7 +182,7 @@ SharedDataWindowChild = TypeVar('SharedDataWindowChild', bound='SharedDataWindow
 
 from control_cluster_bridge.utilities.shared_data.jnt_imp_control import JntImpCntrlData
 
-from SharsorIPCpp.PySharsorIPC import VLevel
+from EigenIPC.PyEigenIPC import VLevel
 
 import numpy as np
 
