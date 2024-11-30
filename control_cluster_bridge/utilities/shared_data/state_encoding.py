@@ -2,7 +2,7 @@ from EigenIPC.PyEigenIPC import StringTensorServer, StringTensorClient
 from EigenIPC.PyEigenIPCExt.wrappers.shared_data_view import SharedTWrapper
 from EigenIPC.PyEigenIPC import VLevel
 from EigenIPC.PyEigenIPC import LogType
-from EigenIPC.PyEigenIPC import dtype as sharsor_dtype 
+from EigenIPC.PyEigenIPC import dtype as eigenipc_dtype 
 from EigenIPC.PyEigenIPC import Journal
 
 from control_cluster_bridge.utilities.shared_data.abstractions import SharedDataBase
@@ -63,7 +63,7 @@ class JntsState(SharedTWrapper):
             is_server = is_server, 
             n_rows = n_robots, 
             n_cols = n_cols, 
-            dtype = sharsor_dtype.Float,
+            dtype = eigenipc_dtype.Float,
             verbose = verbose, 
             vlevel = vlevel,
             fill_value = fill_value, 
@@ -293,7 +293,7 @@ class RootState(SharedTWrapper):
             is_server = is_server, 
             n_rows = n_robots, 
             n_cols = n_cols, 
-            dtype = sharsor_dtype.Float,
+            dtype = eigenipc_dtype.Float,
             verbose = verbose, 
             vlevel = vlevel,
             fill_value = fill_value, 
@@ -560,7 +560,7 @@ class ContactWrenches(SharedTWrapper):
             is_server = is_server, 
             n_rows = n_robots, 
             n_cols = n_cols, 
-            dtype = sharsor_dtype.Float,
+            dtype = eigenipc_dtype.Float,
             verbose = verbose, 
             vlevel = vlevel,
             fill_value = fill_value, 
@@ -773,7 +773,7 @@ class ContactPos(SharedTWrapper):
             is_server = is_server, 
             n_rows = n_robots, 
             n_cols = n_cols, 
-            dtype = sharsor_dtype.Float,
+            dtype = eigenipc_dtype.Float,
             verbose = verbose, 
             vlevel = vlevel,
             fill_value = fill_value, 
@@ -991,7 +991,7 @@ class ContactVel(SharedTWrapper):
             is_server = is_server, 
             n_rows = n_robots, 
             n_cols = n_cols, 
-            dtype = sharsor_dtype.Float,
+            dtype = eigenipc_dtype.Float,
             verbose = verbose, 
             vlevel = vlevel,
             fill_value = fill_value, 
