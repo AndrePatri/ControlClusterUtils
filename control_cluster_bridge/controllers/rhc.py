@@ -36,7 +36,7 @@ from control_cluster_bridge.utilities.math_utils import world2base_frame
 
 from EigenIPC.PyEigenIPC import VLevel
 from EigenIPC.PyEigenIPC import Journal, LogType
-from EigenIPC.PyEigenIPC.wrappers.shared_data_view import SharedTWrapper
+from EigenIPC.PyEigenIPCExt.wrappers.shared_data_view import SharedTWrapper
 from EigenIPC.PyEigenIPC import dtype
 
 from typing import List

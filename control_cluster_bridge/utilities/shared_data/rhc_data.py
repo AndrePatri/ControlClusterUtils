@@ -1,7 +1,7 @@
 from EigenIPC.PyEigenIPC import dtype
 
-from EigenIPC.PyEigenIPC.wrappers.shared_data_view import SharedTWrapper
-from EigenIPC.PyEigenIPC.wrappers.shared_tensor_dict import SharedTensorDict
+from EigenIPC.PyEigenIPCExt.wrappers.shared_data_view import SharedTWrapper
+from EigenIPC.PyEigenIPCExt.wrappers.shared_tensor_dict import SharedTensorDict
 from EigenIPC.PyEigenIPC import VLevel
 from EigenIPC.PyEigenIPC import LogType
 from EigenIPC.PyEigenIPC import Journal

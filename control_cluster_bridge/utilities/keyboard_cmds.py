@@ -18,7 +18,7 @@
 from pynput import keyboard
 from pynput.keyboard import Key
 
-from EigenIPC.PyEigenIPC.wrappers.shared_data_view import SharedTWrapper
+from EigenIPC.PyEigenIPCExt.wrappers.shared_data_view import SharedTWrapper
 from EigenIPC.PyEigenIPC import VLevel
 from EigenIPC.PyEigenIPC import Journal, LogType
 from EigenIPC.PyEigenIPC import dtype
