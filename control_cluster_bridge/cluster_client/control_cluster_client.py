@@ -234,7 +234,7 @@ class ControlClusterClient(ABC):
         from control_cluster_bridge.utilities.shared_data.cluster_profiling import RhcProfiling
         from control_cluster_bridge.utilities.shared_data.cluster_data import SharedClusterInfo
 
-        from SharsorIPCpp.PySharsor.wrappers.shared_data_view import SharedTWrapper
+        from EigenIPC.PyEigenIPC.wrappers.shared_data_view import SharedTWrapper
         from EigenIPC.PyEigenIPC import dtype
 
         self._remote_term = SharedTWrapper(namespace=self._namespace,

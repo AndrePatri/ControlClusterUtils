@@ -1,5 +1,5 @@
 from EigenIPC.PyEigenIPC import StringTensorServer, StringTensorClient
-from SharsorIPCpp.PySharsor.wrappers.shared_data_view import SharedTWrapper
+from EigenIPC.PyEigenIPC.wrappers.shared_data_view import SharedTWrapper
 from EigenIPC.PyEigenIPC import VLevel
 from EigenIPC.PyEigenIPC import LogType
 from EigenIPC.PyEigenIPC import Journal
