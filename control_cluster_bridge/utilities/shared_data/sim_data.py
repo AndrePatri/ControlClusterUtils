@@ -48,7 +48,7 @@ class DynamicSimInfoNames:
                 "world_stepping_dt",
                 "cluster_state_update_dt",
                 "cluster_sol_time",
-                "time_to_get_states_from_sim",
+                "time_to_get_states_from_env",
                 "n_sim_steps",
                 "n_cluster_trigger_steps",
                 "n_cluster_sol_steps",

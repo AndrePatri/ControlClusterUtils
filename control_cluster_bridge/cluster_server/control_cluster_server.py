@@ -560,7 +560,7 @@ class ControlClusterServer(ABC):
         else:
             # only write to shared mem (gpu mirror is not used)
             self._robot_states.synch_to_shared_mem()
-
+        
     def _get_rhc_sol(self):
 
         if self._using_gpu:
