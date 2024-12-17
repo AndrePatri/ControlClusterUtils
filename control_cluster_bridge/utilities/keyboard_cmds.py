@@ -34,6 +34,8 @@ class RefsFromKeyboard:
         shared_refs, 
         verbose = False):
 
+        n_contacts=4
+        
         self._verbose = verbose
 
         self.namespace = namespace
@@ -56,10 +58,20 @@ class RefsFromKeyboard:
         self.enable_phase_id_change = False
         self._phase_id_current=0
         self._contact_dpos=0.02
+
+        self._enable_flight_param_change=False
+        self._d_flight_length=1
+        self._d_flight_apex=0.01
+        self._d_flight_end=0.01
+        self._d_flength_enabled=False
+        self._d_fapex_enabled=False
+        self._d_fend_enabled=False
+        self._d_fparam_enabled_contact_i = [False]*n_contacts
+
         self.enable_contact_pos_change= False
-        self.enable_contact_pos_change_ci = [False]*4
+        self.enable_contact_pos_change_ci = [False]*n_contacts
         self.enable_contact_pos_change_xyz = [False]*3
-        n_contacts=4
+        
         self.contact_pos_change_vals = np.zeros((3, n_contacts))
         self.cluster_idx = -1
         self.cluster_idx_np = np.array(self.cluster_idx)
@@ -124,6 +136,7 @@ class RefsFromKeyboard:
             self._shared_refs.rob_refs.synch_from_shared_mem()
             self._shared_refs.contact_flags.synch_all(read=True, retry=True)
             self._shared_refs.phase_id.synch_all(read=True, retry=True)
+            self._shared_refs.flight_settings.synch_all(read=True, retry=True)
         
         else:
             
@@ -140,6 +153,10 @@ class RefsFromKeyboard:
             
             self._shared_refs.phase_id.synch_retry(row_index=self.cluster_idx, col_index=0, 
                                                 n_rows=1, n_cols=self._shared_refs.phase_id.n_cols,
+                                                read=False)
+            
+            self._shared_refs.flight_settings.synch_retry(row_index=self.cluster_idx, col_index=0, 
+                                                n_rows=1, n_cols=self._shared_refs.flight_settings.n_cols,
                                                 read=False)
                                                 
     def _update_base_height(self, 
@@ -215,6 +232,47 @@ class RefsFromKeyboard:
         phase_id_shared[self.cluster_idx, :] = phase_id
         self._phase_id_current=phase_id
 
+    def _update_flight_params(self, contact_idx: int, increment: bool = True):
+        
+        if self._d_flength_enabled:
+            len_now=self._shared_refs.flight_settings.get(data_type="len",
+                    robot_idxs=self.cluster_idx,
+                    contact_idx=contact_idx)
+            if increment:
+                len_now=len_now+self._d_flight_length
+            else:
+                len_now=len_now-self._d_flight_length
+            self._shared_refs.flight_settings.set(data=np.array(len_now),
+                    data_type="len",
+                    robot_idxs=self.cluster_idx,
+                    contact_idx=contact_idx)
+        
+        if self._d_fapex_enabled:
+            apex_now=self._shared_refs.flight_settings.get(data_type="apex_dpos",
+                    robot_idxs=self.cluster_idx,
+                    contact_idx=contact_idx)
+            if increment:
+                apex_now=apex_now+self._d_flight_apex
+            else:
+                apex_now=apex_now-self._d_flight_apex
+            self._shared_refs.flight_settings.set(data=np.array(apex_now),
+                data_type="apex_dpos",
+                robot_idxs=self.cluster_idx,
+                contact_idx=contact_idx)
+        
+        if self._d_fend_enabled:
+            end_now=self._shared_refs.flight_settings.get(data_type="end_dpos",
+                    robot_idxs=self.cluster_idx,
+                    contact_idx=contact_idx)
+            if increment:
+                end_now=end_now+self._d_flight_end
+            else:
+                end_now=end_now-self._d_flight_end
+            self._shared_refs.flight_settings.set(data=np.array(end_now),
+                data_type="end_dpos",
+                robot_idxs=self.cluster_idx,
+                contact_idx=contact_idx)
+       
     def _set_contacts(self,
                 key,
                 is_contact: bool = True):
@@ -228,6 +286,103 @@ class RefsFromKeyboard:
         if key.char == "3":
             contact_flags[self.cluster_idx, 3] = is_contact
     
+    def _set_flight_params(self,
+        key):
+
+        if key.char=="F":
+            self._enable_flight_param_change = not self._enable_flight_param_change
+            info = f"Flight params change enabled: {self._enable_flight_param_change}"
+            Journal.log(self.__class__.__name__,
+                "_set_flight_params",
+                info,
+                LogType.INFO,
+                throw_when_excep = True)
+        
+        if key.char=="L":
+            self._d_flength_enabled=not self._d_flength_enabled
+            info = f"Flight length change enabled: {self._d_flength_enabled}"
+            Journal.log(self.__class__.__name__,
+                "_set_flight_params",
+                info,
+                LogType.INFO,
+                throw_when_excep = True)
+        if key.char=="A":
+            self._d_fapex_enabled=not self._d_fapex_enabled
+            info = f"Flight apex change enabled: {self._d_fapex_enabled}"
+            Journal.log(self.__class__.__name__,
+                "_set_flight_params",
+                info,
+                LogType.INFO,
+                throw_when_excep = True)
+        if key.char=="E":
+            self._d_fend_enabled=not self._d_fend_enabled
+            info = f"Flight end change enabled: {self._d_fend_enabled}"
+            Journal.log(self.__class__.__name__,
+                "_set_flight_params",
+                info,
+                LogType.INFO,
+                throw_when_excep = True)
+            
+        if key.char=="o":
+            self._d_fparam_enabled_contact_i[0]=not self._d_fparam_enabled_contact_i[0]
+            info = f"Flight params change enabled for contact 0"
+            Journal.log(self.__class__.__name__,
+                "_set_flight_params",
+                info,
+                LogType.INFO,
+                throw_when_excep = True)
+        if key.char=="p":
+            self._d_fparam_enabled_contact_i[1]=not self._d_fparam_enabled_contact_i[1]
+            info = f"Flight params change enabled for contact 1"
+            Journal.log(self.__class__.__name__,
+                "_set_flight_params",
+                info,
+                LogType.INFO,
+                throw_when_excep = True)
+        if key.char=="k":
+            self._d_fparam_enabled_contact_i[2]=not self._d_fparam_enabled_contact_i[2]
+            info = f"Flight params change enabled for contact 2"
+            Journal.log(self.__class__.__name__,
+                "_set_flight_params",
+                info,
+                LogType.INFO,
+                throw_when_excep = True)
+        if key.char=="l":
+            self._d_fparam_enabled_contact_i[3]=not self._d_fparam_enabled_contact_i[3]
+            info = f"Flight params change enabled for contact 3"
+            Journal.log(self.__class__.__name__,
+                "_set_flight_params",
+                info,
+                LogType.INFO,
+                throw_when_excep = True)
+            
+        if key.char=="+":
+            if self._d_fparam_enabled_contact_i[0]:
+                self._update_flight_params(contact_idx=0,
+                    increment=True)
+            if self._d_fparam_enabled_contact_i[1]:
+                self._update_flight_params(contact_idx=1,
+                    increment=True)
+            if self._d_fparam_enabled_contact_i[2]:
+                self._update_flight_params(contact_idx=2,
+                    increment=True)
+            if self._d_fparam_enabled_contact_i[3]:
+                self._update_flight_params(contact_idx=3,
+                    increment=True)
+        if key.char=="-":
+            if self._d_fparam_enabled_contact_i[0]:
+                self._update_flight_params(contact_idx=0,
+                    increment=False)
+            if self._d_fparam_enabled_contact_i[1]:
+                self._update_flight_params(contact_idx=1,
+                    increment=False)
+            if self._d_fparam_enabled_contact_i[2]:
+                self._update_flight_params(contact_idx=2,
+                    increment=False)
+            if self._d_fparam_enabled_contact_i[3]:
+                self._update_flight_params(contact_idx=3,
+                    increment=False)
+                
     def _set_phase_id(self,
                     key):
 
@@ -467,6 +622,8 @@ class RefsFromKeyboard:
                 self._set_linvel(key)
                 # orientation (twist)
                 self._set_twist(key)
+                
+                self._set_flight_params(key)
 
             self._set_contact_target_pos(key)
 
