@@ -599,6 +599,23 @@ class RHCRefs(SharedDataWindow):
                     legend_list=[""], 
                     ylabel="[float]"))
         
+        flight_sets_leg=[""]*self.shared_data_clients[0].flight_settings.n_cols
+        for i in range(self.shared_data_clients[0].n_contacts()):
+            flight_sets_leg[i]=f"flight_len-contact{i}"
+            flight_sets_leg[i+self.shared_data_clients[0].n_contacts()]=f"flight_dapex-contact{i}"
+            flight_sets_leg[i+2*self.shared_data_clients[0].n_contacts()]=f"flight_dend-contact{i}"
+
+        self.rt_plotters.append(RtPlotWindow(data_dim=self.shared_data_clients[0].flight_settings.n_cols,
+                    n_data = 1, 
+                    update_data_dt=self.update_data_dt, 
+                    update_plot_dt=self.update_plot_dt,
+                    window_duration=self.window_duration, 
+                    parent=None, 
+                    base_name="Flight settings",
+                    window_buffer_factor=self.window_buffer_factor, 
+                    legend_list=flight_sets_leg, 
+                    ylabel="[]"))
+        
         # root state
         self.grid.addFrame(self.rt_plotters[0].base_frame, 0, 0)
         self.grid.addFrame(self.rt_plotters[1].base_frame, 0, 1)
@@ -611,6 +628,7 @@ class RHCRefs(SharedDataWindow):
         self.grid.addFrame(self.rt_plotters[8].base_frame, 4, 0)
         self.grid.addFrame(self.rt_plotters[9].base_frame, 4, 1)
         self.grid.addFrame(self.rt_plotters[10].base_frame, 5, 0)
+        self.grid.addFrame(self.rt_plotters[11].base_frame, 5, 1)
 
     def _init_shared_data(self):
         
@@ -645,6 +663,7 @@ class RHCRefs(SharedDataWindow):
             self.shared_data_clients[0].contact_flags.synch_all(read=True, retry=True)
             self.shared_data_clients[0].phase_id.synch_all(read=True, retry=True)
             self.shared_data_clients[0].flight_info.synch_all(read=True, retry=True)
+            self.shared_data_clients[0].flight_settings.synch_all(read=True, retry=True)
             self.shared_data_clients[0].alpha.synch_all(read=True, retry=True)
             self.shared_data_clients[0].bound_rel.synch_all(read=True, retry=True)
 
@@ -694,6 +713,9 @@ class RHCRefs(SharedDataWindow):
 
             # bound relaxation
             self.rt_plotters[10].rt_plot_widget.update(bound_relax[index, :])
+
+            # flight settings
+            self.rt_plotters[11].rt_plot_widget.update(self.shared_data_clients[0].flight_settings.get(data_type="all", robot_idxs=np_idx).flatten())
 
             
 class RHCInternal(SharedDataWindow):

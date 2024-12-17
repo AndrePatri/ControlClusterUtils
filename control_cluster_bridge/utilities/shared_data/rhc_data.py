@@ -405,6 +405,150 @@ class RhcRefs(SharedDataBase):
                 else:
                     return internal_data[robot_idxs, contact_idx]
 
+    class FlightSettings(SharedTWrapper):
+
+        def __init__(self,
+                namespace = "",
+                is_server = False, 
+                n_robots: int = None, 
+                n_contacts: int = -1,
+                verbose: bool = False, 
+                vlevel: VLevel = VLevel.V0,
+                safe: bool = True,
+                force_reconnection: bool = False,
+                with_gpu_mirror: bool = False,
+                with_torch_view: bool = False,
+                fill_value = 0):
+            
+            basename = "FlightSettings" 
+            
+            self._n_data = 3 # flight length, apex dpos, end dpos (w.r.t initial pos)
+
+            self.n_robots = n_robots
+            self.n_contacts=n_contacts
+
+            super().__init__(namespace = namespace,
+                basename = basename,
+                is_server = is_server, 
+                n_rows = n_robots, 
+                n_cols = self._n_data*n_contacts, 
+                dtype = dtype.Float,
+                verbose = verbose, 
+                vlevel = vlevel,
+                fill_value = fill_value, 
+                safe = safe,
+                force_reconnection=force_reconnection,
+                with_gpu_mirror=with_gpu_mirror,
+                with_torch_view=with_torch_view)
+
+            # root
+            self._len = None
+            self._apex_dpos = None
+            self._end_dpos = None
+            self._all = None
+
+            self._len_gpu = None
+            self._apex_dpos_gpu = None
+            self._end_dpos_gpu = None
+            self._all_gpu = None
+            
+        def run(self):
+            # overriding parent 
+            super().run()
+            if not self.is_server:
+                self.n_robots = self.n_rows
+                self.n_contacts = int(self.n_cols/self._n_data)
+            self._init_views()
+
+        def _init_views(self):
+
+            # root
+            if self._with_torch_view:
+                self._len = self.get_torch_mirror()[:, 0:self.n_contacts].view(self.n_robots, self.n_contacts)
+                self._apex_dpos = self.get_torch_mirror()[:, self.n_contacts:2*self.n_contacts].view(self.n_robots, self.n_contacts)
+                self._end_dpos = self.get_torch_mirror()[:, 2*self.n_contacts:3*self.n_contacts].view(self.n_robots, self.n_contacts)
+                self._all = self.get_torch_mirror()[:, 0:self._n_data*self.n_contacts].view(self.n_robots, self._n_data*self.n_contacts)
+            else:
+                self._len = self.get_numpy_mirror()[:, 0:self.n_contacts].view()
+                self._apex_dpos = self.get_numpy_mirror()[:, self.n_contacts:2*self.n_contacts].view()
+                self._end_dpos = self.get_numpy_mirror()[:, 2*self.n_contacts:3*self.n_contacts].view()
+                self._all = self.get_numpy_mirror()[:, 0:self._n_data*self.n_contacts].view()
+
+            if self.gpu_mirror_exists():
+                # gpu views
+                self._len_gpu = self._gpu_mirror[:, 0:self.n_contacts].view(self.n_robots, self.n_contacts)
+                self._apex_dpos_gpu = self._gpu_mirror[:, self.n_contacts:2*self.n_contacts].view(self.n_robots, self.n_contacts)
+                self._end_dpos_gpu = self._gpu_mirror[:, 2*self.n_contacts:3*self.n_contacts].view(self.n_robots, self.n_contacts)
+                self._all_gpu = self._gpu_mirror[:, 0:self._n_data*self.n_contacts].view(self.n_robots, self._n_data*self.n_contacts)
+        
+        def _retrieve_data(self,
+            name: str,
+            gpu: bool = False):
+            
+            if not gpu:
+                if name == "len":
+                    return self._len
+                if name == "apex_dpos":
+                    return self._apex_dpos
+                if name == "end_dpos":
+                    return self._end_dpos
+                elif name == "all":
+                    return self._all
+                else:
+                    return None
+            else:
+                if name == "len":
+                    return self._len_gpu
+                if name == "apex_dpos":
+                    return self._apex_dpos_gpu
+                if name == "end_dpos":
+                    return self._end_dpos_gpu
+                elif name == "all":
+                    return self._all_gpu
+                else:
+                    return None
+        
+        def set(self,
+                data,
+                data_type: str,
+                robot_idxs= None,
+                contact_idx = None,
+                gpu: bool = False):
+
+            internal_data = self._retrieve_data(name=data_type,
+                gpu=gpu)
+            
+            if robot_idxs is None:
+                if contact_idx is None:
+                    internal_data[:, :] = data
+                else:
+                    internal_data[:, contact_idx] = data
+            else:
+                if contact_idx is None:
+                    internal_data[robot_idxs, :] = data
+                else:
+                    internal_data[robot_idxs, contact_idx] = data
+                    
+        def get(self,
+            data_type: str,
+            robot_idxs = None,
+            contact_idx = None,
+            gpu: bool = False):
+
+            internal_data = self._retrieve_data(name=data_type,
+                        gpu=gpu)
+                
+            if robot_idxs is None:
+                if contact_idx is None:
+                    return internal_data
+                else:
+                    return internal_data[:, contact_idx]
+            else:
+                if contact_idx is None:
+                    return internal_data[robot_idxs, :]
+                else:
+                    return internal_data[robot_idxs, contact_idx]
+                
     class AlphaView(SharedTWrapper):
         
         def __init__(self,
@@ -560,6 +704,7 @@ class RhcRefs(SharedDataBase):
             self.phase_id.get_shared_mem(),
             self.contact_flags.get_shared_mem(),
             self.flight_info.get_shared_mem(),
+            self.flight_settings.get_shared_mem(),
             self.alpha.get_shared_mem(),
             self.bound_rel.get_shared_mem()]
     
@@ -599,6 +744,18 @@ class RhcRefs(SharedDataBase):
                             safe=self.safe)
         self.flight_info.run()
 
+        self.flight_settings = self.FlightSettings(namespace=self.namespace,
+                            is_server=self.is_server,
+                            n_robots=self.n_robots,
+                            n_contacts=self._n_contacts,
+                            verbose=self.verbose,
+                            vlevel=self.vlevel,
+                            force_reconnection=self.force_reconnection,
+                            with_gpu_mirror=self._with_gpu_mirror,
+                            with_torch_view=self._with_torch_view,
+                            safe=self.safe)
+        self.flight_settings.run()
+
         self._is_runnning = True
     
     def n_contacts(self):
@@ -611,6 +768,8 @@ class RhcRefs(SharedDataBase):
             self.rob_refs.close()
             self.phase_id.close()
             self.flight_info.close()
+            self.flight_settings.close()
+
             self.contact_flags.close()
             self.alpha.close()
             self.bound_rel.close()
