@@ -325,7 +325,7 @@ class RefsFromKeyboard:
             
         if key.char=="o":
             self._d_fparam_enabled_contact_i[0]=not self._d_fparam_enabled_contact_i[0]
-            info = f"Flight params change enabled for contact 0"
+            info = f"Flight params change enabled: {self._d_fparam_enabled_contact_i[0]} for contact 0"
             Journal.log(self.__class__.__name__,
                 "_set_flight_params",
                 info,
@@ -333,7 +333,7 @@ class RefsFromKeyboard:
                 throw_when_excep = True)
         if key.char=="p":
             self._d_fparam_enabled_contact_i[1]=not self._d_fparam_enabled_contact_i[1]
-            info = f"Flight params change enabled for contact 1"
+            info = f"Flight params change enabled: {self._d_fparam_enabled_contact_i[1]} for contact 1"
             Journal.log(self.__class__.__name__,
                 "_set_flight_params",
                 info,
@@ -341,7 +341,7 @@ class RefsFromKeyboard:
                 throw_when_excep = True)
         if key.char=="k":
             self._d_fparam_enabled_contact_i[2]=not self._d_fparam_enabled_contact_i[2]
-            info = f"Flight params change enabled for contact 2"
+            info = f"Flight params change enabled: {self._d_fparam_enabled_contact_i[2]} for contact 2"
             Journal.log(self.__class__.__name__,
                 "_set_flight_params",
                 info,
@@ -349,7 +349,7 @@ class RefsFromKeyboard:
                 throw_when_excep = True)
         if key.char=="l":
             self._d_fparam_enabled_contact_i[3]=not self._d_fparam_enabled_contact_i[3]
-            info = f"Flight params change enabled for contact 3"
+            info = f"Flight params change enabled: {self._d_fparam_enabled_contact_i[3]} for contact 3"
             Journal.log(self.__class__.__name__,
                 "_set_flight_params",
                 info,
