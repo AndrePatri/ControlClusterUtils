@@ -48,6 +48,9 @@ class ControlClusterClient(ABC):
         # ciao :D
         #        CR 
 
+        # self._fork_ctx_name='forkserver'
+        self._fork_ctx_name='fork'
+
         self._custom_opts = custom_opts
 
         signal.signal(signal.SIGINT, self._handle_sigint)
@@ -417,18 +420,31 @@ class ControlClusterClient(ABC):
         # in the core ids list
         num_cores = len(core_ids)
         return core_ids[process_index % num_cores]
+    
+    def _import_aux_libs(self):
+        # to be overrden by child (to reduce mem. footprint)
+        pass
 
     def _spawn_processes(self):
 
         ctx = None
         ctx_name = ""
         if self.use_mp_fork:
-            ctx = mp.get_context('forkserver')
-            ctx_name="forkserver"
+            ctx = mp.get_context(self._fork_ctx_name)
+            ctx_name=self._fork_ctx_name
         else:
             ctx = mp.get_context('spawn')
             ctx_name="spawn"
         
+        # here import the main necessary libraries with higher mem footprint
+        # (this way, if using fork, the child will not need to
+        # reimport them, reducing mem. overhead)
+        import time 
+        import numpy as np
+        import os
+        self._import_aux_libs() # can be used by child classes to dynamically import lbraries
+        # before any child proc is spawned
+
         Journal.log(self.__class__.__name__,
                         "_spawn_processes",
                         f"spawning processes (using context {ctx_name})-->",
