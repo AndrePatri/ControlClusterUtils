@@ -99,8 +99,9 @@ class ControlClusterClient(ABC):
 
         self._proc_closed=False
 
-        self._sysmem_start=get_system_memory(label="__init__()", prev=0.0)
-        self._sysmem_run=self._sysmem_start
+        if self._debug:
+            self._system_start,self._system_avail =get_system_memory(label="__init__()", prev=0.0, db_print=False)
+            self._system_run=self._system_start
     
     def __del__(self):
         self.terminate()
@@ -293,19 +294,23 @@ class ControlClusterClient(ABC):
             force_reconnection=True)
         self.cluster_data.run()
 
-        self._sysmem_run=get_system_memory(label="run", prev=self._sysmem_start)
-
         while not self._terminated:
             nsecs =  1000000000 # 1 sec
             PerfSleep.thread_sleep(nsecs) # we just keep it alive
             shared_rhc_files_val=[""]*shared_rhc_files.length()
             shared_rhc_files.read_vec(shared_rhc_files_val, 0)
+            if self._debug:
+                self._system_run, self._system_avail=get_system_memory(label="run()", prev=self._system_start, db_print=False)
+                meminfo=f"System Memory: Used = {self._system_run} GB, Available = {self._system_avail} GB,differece {self._system_run-self._system_start}"
+                Journal.log(self.__class__.__name__,
+                            "run",
+                            meminfo,
+                            LogType.INFO)
             if self._childs_all_dead():
                 Journal.log(self.__class__.__name__,
                             "run",
                             "no child process is alive -> will terminate",
-                            LogType.WARN,
-                            throw_when_excep = False)
+                            LogType.WARN)
                 break
             else:
                 continue
@@ -441,25 +446,29 @@ class ControlClusterClient(ABC):
     
     def _import_aux_libs(self):
         # to be overriden by child (to reduce mem. footprint)
-        pass
+        import time 
+        import numpy as np
+        import os
+
+        from EigenIPC.PyEigenIPC import StringTensorServer, StringTensorClient
+        from EigenIPC.PyEigenIPCExt.wrappers.shared_data_view import SharedTWrapper
+        from EigenIPC.PyEigenIPC import VLevel
+        from EigenIPC.PyEigenIPC import LogType
+        from EigenIPC.PyEigenIPC import dtype as eigenipc_dtype 
+        from EigenIPC.PyEigenIPC import Journal
+        from control_cluster_bridge.utilities.shared_data.abstractions import SharedDataBase
+
+        from typing import List
 
     def _spawn_processes(self):
 
-        ctx = None
-        ctx_name = ""
-        if self.use_mp_fork:
-            ctx = mp.get_context(self._fork_ctx_name)
-            ctx_name=self._fork_ctx_name
-        else:
-            ctx = mp.get_context('spawn')
-            ctx_name="spawn"
+        ctx = mp.get_context(self._fork_ctx_name)
+        ctx_name=self._fork_ctx_name
         
         # here import the main necessary libraries with higher mem footprint
         # (this way, if using fork, the child will not need to
         # reimport them, reducing mem. overhead)
-        import time 
-        import numpy as np
-        import os
+        
         self._import_aux_libs() # can be used by child classes to dynamically import lbraries
         # before any child proc is spawned
 
