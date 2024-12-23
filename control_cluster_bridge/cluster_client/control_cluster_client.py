@@ -26,6 +26,8 @@ from EigenIPC.PyEigenIPC import VLevel
 
 import signal
 
+from control_cluster_bridge.utilities.cpu_utils.core_utils import get_memory_usage, get_system_memory
+
 class ControlClusterClient(ABC):
 
     # This is meant to handle a cluster of controllers for a type of robot, 
@@ -96,6 +98,9 @@ class ControlClusterClient(ABC):
         self._terminated = False
 
         self._proc_closed=False
+
+        self._sysmem_start=get_system_memory(label="__init__()", prev=0.0)
+        self._sysmem_run=self._sysmem_start
     
     def __del__(self):
         self.terminate()
@@ -141,6 +146,8 @@ class ControlClusterClient(ABC):
                     idx: int,
                     available_cores: List[int]):
         
+        start_mem_usage=get_memory_usage(db_print=False)
+
         # this runs in a child process for each controller
         if self.set_affinity:
             # put rhc controller on a single specific core 
@@ -175,6 +182,15 @@ class ControlClusterClient(ABC):
         shared_rhc_files.close()
 
         controller.solve() # runs the solution loop
+
+        # before exiting read some memory db info
+        end_mem_usage=get_memory_usage(db_print=False)
+        meminfo = f"Memory usage for controller n.{idx}-> start {start_mem_usage} GB, end {end_mem_usage} GB, diff {end_mem_usage-start_mem_usage} GB"
+        Journal.log(self.__class__.__name__,
+                "_spawn_processes",
+                meminfo,
+                LogType.STAT,
+                throw_when_excep = True)
 
     def _check_child_ps_status(self):
         for i in range(0, self.cluster_size):
@@ -277,6 +293,8 @@ class ControlClusterClient(ABC):
             force_reconnection=True)
         self.cluster_data.run()
 
+        self._sysmem_run=get_system_memory(label="run", prev=self._sysmem_start)
+
         while not self._terminated:
             nsecs =  1000000000 # 1 sec
             PerfSleep.thread_sleep(nsecs) # we just keep it alive
@@ -292,7 +310,7 @@ class ControlClusterClient(ABC):
             else:
                 continue
 
-        self._close_process() #
+        self._close_process() 
         shared_rhc_files.close()
         
     def terminate(self):
@@ -422,7 +440,7 @@ class ControlClusterClient(ABC):
         return core_ids[process_index % num_cores]
     
     def _import_aux_libs(self):
-        # to be overrden by child (to reduce mem. footprint)
+        # to be overriden by child (to reduce mem. footprint)
         pass
 
     def _spawn_processes(self):
