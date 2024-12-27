@@ -235,7 +235,12 @@ class RHController(ABC):
                                 with_torch_view=False, 
                                 safe=False,
                                 verbose=self._verbose,
-                                vlevel=VLevel.V2) 
+                                vlevel=VLevel.V2,
+                                optimize_mem=True,
+                                n_robots=1, # we just need the row corresponding to this controller
+                                n_jnts=None, # got from server
+                                n_contacts=None # got from server
+                                ) 
         self.robot_state.run()
         self.robot_cmds = RhcCmds(namespace=self.namespace,
                                 is_server=False,
@@ -244,7 +249,12 @@ class RHController(ABC):
                                 with_torch_view=False, 
                                 safe=False,
                                 verbose=self._verbose,
-                                vlevel=VLevel.V2) 
+                                vlevel=VLevel.V2,
+                                optimize_mem=True,
+                                n_robots=1, # we just need the row corresponding to this controller
+                                n_jnts=None, # got from server
+                                n_contacts=None # got from server
+                                ) 
         self.robot_cmds.run()
         self.robot_pred = RhcPred(namespace=self.namespace,
                                 is_server=False,
@@ -253,7 +263,12 @@ class RHController(ABC):
                                 with_torch_view=False, 
                                 safe=False,
                                 verbose=self._verbose,
-                                vlevel=VLevel.V2)
+                                vlevel=VLevel.V2,
+                                optimize_mem=True,
+                                n_robots=1, # we just need the row corresponding to this controller
+                                n_jnts=None, # got from server
+                                n_contacts=None # got from server
+                                )
         self.robot_pred.run()
         self.rhc_pred_delta = RhcPredDelta(namespace=self.namespace,
                                 is_server=False,
@@ -262,7 +277,12 @@ class RHController(ABC):
                                 with_torch_view=False, 
                                 safe=False,
                                 verbose=self._verbose,
-                                vlevel=VLevel.V2)
+                                vlevel=VLevel.V2,
+                                optimize_mem=True,
+                                n_robots=1, # we just need the row corresponding to this controller
+                                n_jnts=None, # got from server
+                                n_contacts=None # got from server
+                                )
         self.rhc_pred_delta.run()
 
     def _rhc(self):
@@ -452,7 +472,12 @@ class RHController(ABC):
             verbose=self._verbose, 
             vlevel=VLevel.V2,
             with_torch_view=False, 
-            with_gpu_mirror=False)
+            with_gpu_mirror=False,
+            optimize_mem=True,
+            cluster_size=1, # we just need the row corresponding to this controller
+            n_contacts=None, # we get this from server
+            n_nodes=None # we get this from server
+            )
         self.rhc_status.run() # rhc status (reg. flags, failure, tot cost, tot cnstrl viol, etc...)
 
         # acquire semaphores since we have to perform non-atomic operations
@@ -491,12 +516,18 @@ class RHController(ABC):
         self.rhc_status.registration.synch_all(retry = True,
                                                 read = True)
         registrations = self.rhc_status.registration.get_numpy_mirror()
-        self.controller_index = self._assign_cntrl_index(registrations)
+        # self.controller_index = self._assign_cntrl_index(registrations)
+        self.controller_index = controllers_counter.item() -1 
+
         self._class_name_base = self._class_name_base+str(self.controller_index)
-        self.controller_index_np = np.array(self.controller_index)
-        registrations[self.controller_index, 0] = True
+        # self.controller_index_np = np.array(self.controller_index)
+        self.controller_index_np = np.array(0) # given that we use optimize_mem, the shared mem copy has shape 1 x n_cols (we can write and read at [0, :])
+        
+        registrations[self.controller_index_np, 0] = True
         self.rhc_status.registration.synch_all(retry = True,
-                                        read = False) 
+                                        read = False,
+                                        row_index=self.controller_index,
+                                        col_index=0) 
 
         # now all heavy stuff that would otherwise make the registration slow
         self._remote_term = SharedTWrapper(namespace=self.namespace,
@@ -515,9 +546,12 @@ class RHController(ABC):
                                     name=self.namespace,
                                     verbose=self._verbose,
                                     vlevel=VLevel.V2,
-                                    safe=True) # profiling data
+                                    safe=True,
+                                    optimize_mem=True,
+                                    cluster_size=1 # we just need the row corresponding to this controller
+                                    ) # profiling data
         self.cluster_stats.run()
-        self.cluster_stats.synch_info()
+        self.cluster_stats.synch_info(row_index=self.controller_index)
     
         self._create_jnt_maps()
         self.init_rhc_task_cmds() # initializes rhc interface to external commands (defined by child class)
@@ -531,7 +565,9 @@ class RHController(ABC):
 
         # writing some static info about this controller
         self.rhc_status.rhc_static_info.synch_all(retry = True,
-            read = True) # first read current static info from other controllers
+            read = True,
+            row_index=self.controller_index,
+            col_index=0) # first read current static info from other controllers
         self.rhc_status.rhc_static_info.set(data=np.array(self._dt),
             data_type="dts",
             rhc_idxs=self.controller_index_np,
@@ -630,7 +666,7 @@ class RHController(ABC):
 
         Journal.log(self._class_name_base,
                     "_register_to_cluster",
-                    f"controller {self.controller_index_np} registered",
+                    f"controller {self.controller_index} registered",
                     LogType.STAT,
                     throw_when_excep = True)
         

@@ -31,7 +31,8 @@ class RobotState(FullRobState):
             safe: bool = True,
             verbose: bool = False,
             vlevel: VLevel = VLevel.V1,
-            fill_value = 0):
+            fill_value = 0,
+            optimize_mem: bool = False):
 
         basename = "RobotState"
 
@@ -50,7 +51,8 @@ class RobotState(FullRobState):
             safe=safe,
             verbose=verbose,
             vlevel=vlevel,
-            fill_value=fill_value)
+            fill_value=fill_value,
+            optimize_mem=optimize_mem)
 
 class RhcCmds(FullRobState):
 
@@ -69,7 +71,8 @@ class RhcCmds(FullRobState):
             safe: bool = True,
             verbose: bool = False,
             vlevel: VLevel = VLevel.V1,
-            fill_value=0):
+            fill_value=0,
+            optimize_mem: bool = False):
 
         basename = "RhcCmds"
 
@@ -88,7 +91,8 @@ class RhcCmds(FullRobState):
             safe=safe,
             verbose=verbose,
             vlevel=vlevel,
-            fill_value=fill_value)
+            fill_value=fill_value,
+            optimize_mem=optimize_mem)
 
 class RhcPred(FullRobState):
 
@@ -107,7 +111,8 @@ class RhcPred(FullRobState):
             safe: bool = True,
             verbose: bool = False,
             vlevel: VLevel = VLevel.V1,
-            fill_value=0):
+            fill_value=0,
+            optimize_mem: bool = False):
 
         basename = "RhcPredictions"
 
@@ -126,7 +131,8 @@ class RhcPred(FullRobState):
             safe=safe,
             verbose=verbose,
             vlevel=vlevel,
-            fill_value=fill_value)
+            fill_value=fill_value,
+            optimize_mem=optimize_mem)
 
 class RhcPredDelta(FullRobState):
 
@@ -145,7 +151,8 @@ class RhcPredDelta(FullRobState):
             safe: bool = True,
             verbose: bool = False,
             vlevel: VLevel = VLevel.V1,
-            fill_value=0):
+            fill_value=0,
+            optimize_mem: bool = False):
 
         basename = "RhcPredictionDelta"
 
@@ -164,7 +171,8 @@ class RhcPredDelta(FullRobState):
             safe=safe,
             verbose=verbose,
             vlevel=vlevel,
-            fill_value=fill_value)
+            fill_value=fill_value,
+            optimize_mem=optimize_mem)
         
 class RhcRefs(SharedDataBase):
     
@@ -187,6 +195,7 @@ class RhcRefs(SharedDataBase):
                 verbose: bool = False,
                 vlevel: VLevel = VLevel.V1,
                 fill_value=np.nan, # if ref is not used
+                optimize_mem: bool = False
                 ):
 
             basename = basename + "RobotFullConfigRef"
@@ -206,7 +215,8 @@ class RhcRefs(SharedDataBase):
                 safe=safe,
                 verbose=verbose,
                 vlevel=vlevel,
-                fill_value=fill_value)
+                fill_value=fill_value,
+                optimize_mem=optimize_mem)
     
     class Phase(SharedTWrapper):
 
@@ -220,7 +230,8 @@ class RhcRefs(SharedDataBase):
             force_reconnection: bool = False,
             with_torch_view: bool = False,
             with_gpu_mirror: bool = False,
-            safe: bool = True):
+            safe: bool = True,
+            optimize_mem: bool = False):
         
             basename = basename + "Phase" # hardcoded
 
@@ -236,7 +247,8 @@ class RhcRefs(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_torch_view=with_torch_view,
                 with_gpu_mirror=with_gpu_mirror,
-                fill_value = -1)
+                fill_value = -1,
+                optimize_mem=optimize_mem)
             
     class ContactFlag(SharedTWrapper):
 
@@ -251,7 +263,8 @@ class RhcRefs(SharedDataBase):
             force_reconnection: bool = False,
             with_torch_view: bool = False,
             with_gpu_mirror: bool = False,
-            safe: bool = True):
+            safe: bool = True,
+            optimize_mem: bool = False):
         
             basename = basename + "ContactFlag" # hardcoded
 
@@ -267,7 +280,8 @@ class RhcRefs(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_torch_view=with_torch_view,
                 with_gpu_mirror=with_gpu_mirror,
-                fill_value = True)
+                fill_value = True,
+                optimize_mem=optimize_mem)
 
     class FlightInfo(SharedTWrapper):
 
@@ -282,7 +296,8 @@ class RhcRefs(SharedDataBase):
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
                 with_torch_view: bool = False,
-                fill_value = 0):
+                fill_value = 0,
+                optimize_mem: bool = False):
             
             basename = "FlightInfo" 
             
@@ -303,7 +318,8 @@ class RhcRefs(SharedDataBase):
                 safe = safe,
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
-                with_torch_view=with_torch_view)
+                with_torch_view=with_torch_view,
+                optimize_mem=optimize_mem)
 
             # root
             self._pos = None
@@ -418,7 +434,8 @@ class RhcRefs(SharedDataBase):
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
                 with_torch_view: bool = False,
-                fill_value = 0):
+                fill_value = 0,
+                optimize_mem: bool = False):
             
             basename = "FlightSettings" 
             
@@ -439,7 +456,8 @@ class RhcRefs(SharedDataBase):
                 safe = safe,
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
-                with_torch_view=with_torch_view)
+                with_torch_view=with_torch_view,
+                optimize_mem=optimize_mem)
 
             # root
             self._len = None
@@ -559,7 +577,8 @@ class RhcRefs(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "Alpha" # hardcoded
 
@@ -575,7 +594,8 @@ class RhcRefs(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = 0.0)
+                fill_value = 0.0,
+                optimize_mem=optimize_mem)
     
     class BoundRelaxView(SharedTWrapper):
         
@@ -587,7 +607,8 @@ class RhcRefs(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "BoundRelax" # hardcoded
 
@@ -603,7 +624,8 @@ class RhcRefs(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = 0.0)
+                fill_value = 0.0,
+                optimize_mem=optimize_mem)
             
     def __init__(self,
                 namespace: str,
@@ -620,8 +642,11 @@ class RhcRefs(SharedDataBase):
                 safe: bool = False,
                 verbose: bool = False,
                 vlevel: VLevel = VLevel.V1,
-                fill_value=np.nan):
+                fill_value=np.nan,
+                optimize_mem: bool = False):
         
+        self._optimize_mem=optimize_mem
+
         self.basename = "Rhc"
 
         self.is_server = is_server
@@ -656,7 +681,8 @@ class RhcRefs(SharedDataBase):
                                     safe=safe,
                                     verbose=verbose,
                                     vlevel=vlevel,
-                                    fill_value=fill_value)
+                                    fill_value=fill_value,
+                                    optimize_mem=optimize_mem)
         
         self.phase_id = self.Phase(namespace=namespace,
                             basename=self.basename,
@@ -667,7 +693,8 @@ class RhcRefs(SharedDataBase):
                             force_reconnection=force_reconnection,
                             with_gpu_mirror=with_gpu_mirror,
                             with_torch_view=with_torch_view,
-                            safe=safe)
+                            safe=safe,
+                            optimize_mem=optimize_mem)
         
         self.alpha = self.AlphaView(namespace=namespace, 
                                 is_server=is_server, 
@@ -676,7 +703,8 @@ class RhcRefs(SharedDataBase):
                                 vlevel=vlevel,
                                 force_reconnection=force_reconnection,
                                 with_gpu_mirror=with_gpu_mirror,
-                                with_torch_view=with_torch_view)
+                                with_torch_view=with_torch_view,
+                                optimize_mem=optimize_mem)
         
         self.bound_rel = self.BoundRelaxView(namespace=namespace, 
                                 is_server=is_server, 
@@ -685,7 +713,8 @@ class RhcRefs(SharedDataBase):
                                 vlevel=vlevel,
                                 force_reconnection=force_reconnection,
                                 with_gpu_mirror=with_gpu_mirror,
-                                with_torch_view=with_torch_view)
+                                with_torch_view=with_torch_view,
+                                optimize_mem=optimize_mem)
         
         self.contact_flags = None
 
@@ -729,7 +758,8 @@ class RhcRefs(SharedDataBase):
                             force_reconnection=self.force_reconnection,
                             with_gpu_mirror=self._with_gpu_mirror,
                             with_torch_view=self._with_torch_view,
-                            safe=self.safe)
+                            safe=self.safe,
+                            optimize_mem=self._optimize_mem)
         self.contact_flags.run()
 
         self.flight_info = self.FlightInfo(namespace=self.namespace,
@@ -741,7 +771,8 @@ class RhcRefs(SharedDataBase):
                             force_reconnection=self.force_reconnection,
                             with_gpu_mirror=self._with_gpu_mirror,
                             with_torch_view=self._with_torch_view,
-                            safe=self.safe)
+                            safe=self.safe,
+                            optimize_mem=self._optimize_mem)
         self.flight_info.run()
 
         self.flight_settings = self.FlightSettings(namespace=self.namespace,
@@ -753,7 +784,8 @@ class RhcRefs(SharedDataBase):
                             force_reconnection=self.force_reconnection,
                             with_gpu_mirror=self._with_gpu_mirror,
                             with_torch_view=self._with_torch_view,
-                            safe=self.safe)
+                            safe=self.safe,
+                            optimize_mem=self._optimize_mem)
         self.flight_settings.run()
 
         self._is_runnning = True
@@ -788,7 +820,8 @@ class RhcStatus(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "ClusterFailFlag" # hardcoded
 
@@ -804,7 +837,8 @@ class RhcStatus(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = False)
+                fill_value = False,
+                optimize_mem=optimize_mem)
     
     class ResetFlagView(SharedTWrapper):
         
@@ -816,7 +850,8 @@ class RhcStatus(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "ClusterResetFlag" # hardcoded
 
@@ -832,7 +867,8 @@ class RhcStatus(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = False)
+                fill_value = False,
+                optimize_mem=optimize_mem)
     
     class TriggerFlagView(SharedTWrapper):
 
@@ -844,7 +880,8 @@ class RhcStatus(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "ClusterTriggerFlag" # hardcoded
 
@@ -860,7 +897,8 @@ class RhcStatus(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = False)
+                fill_value = False,
+                optimize_mem=optimize_mem)
     
     class ActivationFlagView(SharedTWrapper):
 
@@ -872,7 +910,8 @@ class RhcStatus(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "ClusterActivationFlag" # hardcoded
 
@@ -888,7 +927,8 @@ class RhcStatus(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = False)
+                fill_value = False,
+                optimize_mem=optimize_mem)
     
     class RegistrationFlagView(SharedTWrapper):
 
@@ -900,7 +940,8 @@ class RhcStatus(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "ClusterRegistrationFlag" # hardcoded
 
@@ -916,7 +957,8 @@ class RhcStatus(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = False)
+                fill_value = False,
+                optimize_mem=optimize_mem)
             
     class ControllersCounterView(SharedTWrapper):
 
@@ -927,7 +969,8 @@ class RhcStatus(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "ClusterControllersCounter" # hardcoded
 
@@ -943,7 +986,8 @@ class RhcStatus(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = 0)
+                fill_value = 0,
+                optimize_mem=optimize_mem)
     
     class FailsCounterView(SharedTWrapper):
 
@@ -955,7 +999,8 @@ class RhcStatus(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "ClusterControllerFailsCounter" # hardcoded
 
@@ -971,7 +1016,8 @@ class RhcStatus(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = 0)
+                fill_value = 0,
+                optimize_mem=optimize_mem)
             
     class RhcCostView(SharedTWrapper):
 
@@ -983,7 +1029,8 @@ class RhcStatus(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "RhcCost" # hardcoded
 
@@ -999,7 +1046,8 @@ class RhcStatus(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = np.nan)
+                fill_value = np.nan,
+                optimize_mem=optimize_mem)
     
     class RhcCnstrViolationView(SharedTWrapper):
 
@@ -1011,7 +1059,8 @@ class RhcStatus(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "RhcCnstrViolation" # hardcoded
 
@@ -1027,7 +1076,8 @@ class RhcStatus(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = np.nan)
+                fill_value = np.nan,
+                optimize_mem=optimize_mem)
     
     class RhcNodesCostView(SharedTWrapper):
 
@@ -1040,7 +1090,8 @@ class RhcStatus(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "RhcNodesCost" # hardcoded
 
@@ -1056,7 +1107,8 @@ class RhcStatus(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = 0)
+                fill_value = 0,
+                optimize_mem=optimize_mem)
     
     class RhcNodesCnstrViolationView(SharedTWrapper):
 
@@ -1069,7 +1121,8 @@ class RhcStatus(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "RhcNodesCnstrViolation" # hardcoded
 
@@ -1085,7 +1138,8 @@ class RhcStatus(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = 0)
+                fill_value = 0,
+                optimize_mem=optimize_mem)
     
     class RhcNIterationsView(SharedTWrapper):
 
@@ -1097,7 +1151,8 @@ class RhcStatus(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "RhcNIterations" # hardcoded
 
@@ -1113,7 +1168,8 @@ class RhcStatus(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = np.nan)
+                fill_value = np.nan,
+                optimize_mem=optimize_mem)
     
     class RhcFcNormalized(SharedTWrapper): 
 
@@ -1127,15 +1183,19 @@ class RhcStatus(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "RhcContactForces" # hardcoded
 
+            n_cols=None
+            if is_server:
+                n_cols=n_contacts*3*n_nodes
             super().__init__(namespace = namespace,
                 basename = basename,
                 is_server = is_server, 
                 n_rows = cluster_size, 
-                n_cols = n_contacts*3*n_nodes, 
+                n_cols = n_cols, 
                 verbose = verbose, 
                 vlevel = vlevel,
                 safe = False, # boolean operations are atomic on 64 bit systems
@@ -1143,7 +1203,8 @@ class RhcStatus(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = 0)
+                fill_value = 0,
+                optimize_mem=optimize_mem)
         
         def tot_dim(self):
             return self.n_cols
@@ -1158,7 +1219,8 @@ class RhcStatus(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "RhcFailIndex" # hardcoded
 
@@ -1174,7 +1236,8 @@ class RhcStatus(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = 0)
+                fill_value = 0,
+                optimize_mem=optimize_mem)
     
     class RhcStaticInfo(SharedTWrapper):
 
@@ -1186,7 +1249,8 @@ class RhcStatus(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 force_reconnection: bool = False,
                 with_gpu_mirror: bool = False,
-                with_torch_view: bool = False):
+                with_torch_view: bool = False,
+                optimize_mem: bool = False):
             
             basename = "RhcStaticInfo" # hardcoded
             self.n_data = 6 # rhc dts, rhc horizon length, rhc n nodes, ncontacts,
@@ -1220,7 +1284,8 @@ class RhcStatus(SharedDataBase):
                 force_reconnection=force_reconnection,
                 with_gpu_mirror=with_gpu_mirror,
                 with_torch_view=with_torch_view,
-                fill_value = 0)
+                fill_value = 0,
+                optimize_mem=optimize_mem)
         
         def run(self):
             # overriding parent 
@@ -1326,8 +1391,11 @@ class RhcStatus(SharedDataBase):
             vlevel: VLevel = VLevel.V0,
             force_reconnection: bool = False,
             with_gpu_mirror: bool = False,
-            with_torch_view: bool = False):
+            with_torch_view: bool = False,
+            optimize_mem: bool = False):
 
+        self._optimize_mem=optimize_mem
+        
         self.is_server = is_server
 
         self.cluster_size = cluster_size
@@ -1412,7 +1480,8 @@ class RhcStatus(SharedDataBase):
                                 vlevel=self.vlevel,
                                 force_reconnection=self.force_reconnection,
                                 with_gpu_mirror=self.with_gpu_mirror,
-                                with_torch_view=self.with_torch_view)
+                                with_torch_view=self.with_torch_view,
+                                optimize_mem=self._optimize_mem)
 
         self.fails = self.FailFlagView(namespace=self.namespace, 
                                 is_server=self.is_server, 
@@ -1421,7 +1490,8 @@ class RhcStatus(SharedDataBase):
                                 vlevel=self.vlevel,
                                 force_reconnection=self.force_reconnection,
                                 with_gpu_mirror=self.with_gpu_mirror,
-                                with_torch_view=self.with_torch_view)
+                                with_torch_view=self.with_torch_view,
+                                optimize_mem=self._optimize_mem)
         
         self.resets = self.ResetFlagView(namespace=self.namespace, 
                                 is_server=self.is_server, 
@@ -1430,7 +1500,8 @@ class RhcStatus(SharedDataBase):
                                 vlevel=self.vlevel,
                                 force_reconnection=self.force_reconnection,
                                 with_gpu_mirror=self.with_gpu_mirror,
-                                with_torch_view=self.with_torch_view)
+                                with_torch_view=self.with_torch_view,
+                                optimize_mem=self._optimize_mem)
         
         self.trigger = self.TriggerFlagView(namespace=self.namespace, 
                                 is_server=self.is_server, 
@@ -1439,7 +1510,8 @@ class RhcStatus(SharedDataBase):
                                 vlevel=self.vlevel,
                                 force_reconnection=self.force_reconnection,
                                 with_gpu_mirror=self.with_gpu_mirror,
-                                with_torch_view=self.with_torch_view)
+                                with_torch_view=self.with_torch_view,
+                                optimize_mem=self._optimize_mem)
         
         self.activation_state = self.ActivationFlagView(namespace=self.namespace, 
                                 is_server=self.is_server, 
@@ -1448,7 +1520,8 @@ class RhcStatus(SharedDataBase):
                                 vlevel=self.vlevel,
                                 force_reconnection=self.force_reconnection,
                                 with_gpu_mirror=self.with_gpu_mirror,
-                                with_torch_view=self.with_torch_view)
+                                with_torch_view=self.with_torch_view,
+                                optimize_mem=self._optimize_mem)
         
         self.registration = self.RegistrationFlagView(namespace=self.namespace, 
                                 is_server=self.is_server, 
@@ -1457,7 +1530,8 @@ class RhcStatus(SharedDataBase):
                                 vlevel=self.vlevel,
                                 force_reconnection=self.force_reconnection,
                                 with_gpu_mirror=self.with_gpu_mirror,
-                                with_torch_view=self.with_torch_view)
+                                with_torch_view=self.with_torch_view,
+                                optimize_mem=self._optimize_mem)
 
         self.controllers_counter = self.ControllersCounterView(namespace=self.namespace, 
                                 is_server=self.is_server, 
@@ -1465,7 +1539,8 @@ class RhcStatus(SharedDataBase):
                                 vlevel=self.vlevel,
                                 force_reconnection=self.force_reconnection,
                                 with_gpu_mirror=self.with_gpu_mirror,
-                                with_torch_view=self.with_torch_view)
+                                with_torch_view=self.with_torch_view,
+                                optimize_mem=self._optimize_mem)
         
         self.controllers_fail_counter = self.FailsCounterView(namespace=self.namespace, 
                                 is_server=self.is_server, 
@@ -1474,7 +1549,8 @@ class RhcStatus(SharedDataBase):
                                 vlevel=self.vlevel,
                                 force_reconnection=self.force_reconnection,
                                 with_gpu_mirror=self.with_gpu_mirror,
-                                with_torch_view=self.with_torch_view)
+                                with_torch_view=self.with_torch_view,
+                                optimize_mem=self._optimize_mem)
 
         self.rhc_cost = self.RhcCostView(namespace=self.namespace, 
                                 is_server=self.is_server, 
@@ -1483,7 +1559,8 @@ class RhcStatus(SharedDataBase):
                                 vlevel=self.vlevel,
                                 force_reconnection=self.force_reconnection,
                                 with_gpu_mirror=self.with_gpu_mirror,
-                                with_torch_view=self.with_torch_view)
+                                with_torch_view=self.with_torch_view,
+                                optimize_mem=self._optimize_mem)
 
         self.rhc_constr_viol = self.RhcCnstrViolationView(namespace=self.namespace, 
                                 is_server=self.is_server, 
@@ -1492,7 +1569,8 @@ class RhcStatus(SharedDataBase):
                                 vlevel=self.vlevel,
                                 force_reconnection=self.force_reconnection,
                                 with_gpu_mirror=self.with_gpu_mirror,
-                                with_torch_view=self.with_torch_view)
+                                with_torch_view=self.with_torch_view,
+                                optimize_mem=self._optimize_mem)
         
         self.rhc_nodes_cost = self.RhcNodesCostView(namespace=self.namespace, 
                                 is_server=self.is_server, 
@@ -1502,7 +1580,8 @@ class RhcStatus(SharedDataBase):
                                 vlevel=self.vlevel,
                                 force_reconnection=self.force_reconnection,
                                 with_gpu_mirror=self.with_gpu_mirror,
-                                with_torch_view=self.with_torch_view)
+                                with_torch_view=self.with_torch_view,
+                                optimize_mem=self._optimize_mem)
 
         self.rhc_nodes_constr_viol = self.RhcNodesCnstrViolationView(namespace=self.namespace, 
                                 is_server=self.is_server, 
@@ -1512,7 +1591,8 @@ class RhcStatus(SharedDataBase):
                                 vlevel=self.vlevel,
                                 force_reconnection=self.force_reconnection,
                                 with_gpu_mirror=self.with_gpu_mirror,
-                                with_torch_view=self.with_torch_view)
+                                with_torch_view=self.with_torch_view,
+                                optimize_mem=self._optimize_mem)
 
         self.rhc_n_iter = self.RhcNIterationsView(namespace=self.namespace, 
                                 is_server=self.is_server, 
@@ -1521,7 +1601,8 @@ class RhcStatus(SharedDataBase):
                                 vlevel=self.vlevel,
                                 force_reconnection=self.force_reconnection,
                                 with_gpu_mirror=self.with_gpu_mirror,
-                                with_torch_view=self.with_torch_view)
+                                with_torch_view=self.with_torch_view,
+                                optimize_mem=self._optimize_mem)
         
         self.rhc_fcn = self.RhcFcNormalized(namespace=self.namespace, 
                                 is_server=self.is_server, 
@@ -1532,7 +1613,8 @@ class RhcStatus(SharedDataBase):
                                 vlevel=self.vlevel,
                                 force_reconnection=self.force_reconnection,
                                 with_gpu_mirror=self.with_gpu_mirror,
-                                with_torch_view=self.with_torch_view) 
+                                with_torch_view=self.with_torch_view,
+                                optimize_mem=self._optimize_mem) 
         
         self.rhc_fail_idx = self.RhcFailIndex(namespace=self.namespace, 
                                 is_server=self.is_server, 
@@ -1541,7 +1623,8 @@ class RhcStatus(SharedDataBase):
                                 vlevel=self.vlevel,
                                 force_reconnection=self.force_reconnection,
                                 with_gpu_mirror=self.with_gpu_mirror,
-                                with_torch_view=self.with_torch_view)
+                                with_torch_view=self.with_torch_view,
+                                optimize_mem=self._optimize_mem)
 
     def run(self):
                 
@@ -1606,7 +1689,8 @@ class RhcInternal(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 fill_value: float = np.nan,
                 safe: bool = True,
-                force_reconnection: bool = False):
+                force_reconnection: bool = False,
+                optimize_mem: bool = False):
             
             basename = "Q" # configuration vector
 
@@ -1619,7 +1703,8 @@ class RhcInternal(SharedDataBase):
                 vlevel = vlevel,
                 fill_value = fill_value, 
                 safe = safe,
-                force_reconnection=force_reconnection)
+                force_reconnection=force_reconnection,
+                optimize_mem=optimize_mem)
     
     class V(SharedTWrapper):
 
@@ -1632,7 +1717,8 @@ class RhcInternal(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 fill_value: float = np.nan,
                 safe: bool = True,
-                force_reconnection: bool = False):
+                force_reconnection: bool = False,
+                optimize_mem: bool = False):
             
             basename = "V" # velocity vector
 
@@ -1645,7 +1731,8 @@ class RhcInternal(SharedDataBase):
                 vlevel = vlevel,
                 fill_value = fill_value, 
                 safe = safe,
-                force_reconnection=force_reconnection)
+                force_reconnection=force_reconnection,
+                optimize_mem=optimize_mem)
     
     class A(SharedTWrapper):
 
@@ -1658,7 +1745,8 @@ class RhcInternal(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 fill_value: float = np.nan,
                 safe: bool = True,
-                force_reconnection: bool = False):
+                force_reconnection: bool = False,
+                optimize_mem: bool = False):
             
             basename = "A" # acceleration vector
 
@@ -1671,7 +1759,8 @@ class RhcInternal(SharedDataBase):
                 vlevel = vlevel,
                 fill_value = fill_value, 
                 safe = safe,
-                force_reconnection=force_reconnection)
+                force_reconnection=force_reconnection,
+                optimize_mem=optimize_mem)
     
     class ADot(SharedTWrapper):
 
@@ -1684,7 +1773,8 @@ class RhcInternal(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 fill_value: float = np.nan,
                 safe: bool = True,
-                force_reconnection: bool = False):
+                force_reconnection: bool = False,
+                optimize_mem: bool = False):
             
             basename = "ADot" # jerk vector
 
@@ -1697,7 +1787,8 @@ class RhcInternal(SharedDataBase):
                 vlevel = vlevel,
                 fill_value = fill_value, 
                 safe = safe,
-                force_reconnection=force_reconnection)
+                force_reconnection=force_reconnection,
+                optimize_mem=optimize_mem)
     
     class F(SharedTWrapper):
 
@@ -1710,7 +1801,8 @@ class RhcInternal(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 fill_value: float = np.nan,
                 safe: bool = True,
-                force_reconnection: bool = False):
+                force_reconnection: bool = False,
+                optimize_mem: bool = False):
             
             basename = "F" # cartesian force vector
 
@@ -1723,7 +1815,8 @@ class RhcInternal(SharedDataBase):
                 vlevel = vlevel,
                 fill_value = fill_value, 
                 safe = safe,
-                force_reconnection=force_reconnection)
+                force_reconnection=force_reconnection,
+                optimize_mem=optimize_mem)
             
     class FDot(SharedTWrapper):
 
@@ -1736,7 +1829,8 @@ class RhcInternal(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 fill_value: float = np.nan,
                 safe: bool = True,
-                force_reconnection: bool = False):
+                force_reconnection: bool = False,
+                optimize_mem: bool = False):
             
             basename = "FDot" # yank vector
 
@@ -1749,7 +1843,8 @@ class RhcInternal(SharedDataBase):
                 vlevel = vlevel,
                 fill_value = fill_value, 
                 safe = safe,
-                force_reconnection=force_reconnection)
+                force_reconnection=force_reconnection,
+                optimize_mem=optimize_mem)
             
     class Eff(SharedTWrapper):
 
@@ -1762,7 +1857,8 @@ class RhcInternal(SharedDataBase):
                 vlevel: VLevel = VLevel.V0,
                 fill_value: float = np.nan,
                 safe: bool = True,
-                force_reconnection: bool = False):
+                force_reconnection: bool = False,
+                optimize_mem: bool = False):
             
             basename = "Eff" # hardcoded
 
@@ -1775,7 +1871,8 @@ class RhcInternal(SharedDataBase):
                 vlevel = vlevel,
                 fill_value = fill_value, 
                 safe = safe,
-                force_reconnection=force_reconnection)
+                force_reconnection=force_reconnection,
+                optimize_mem=optimize_mem)
 
     class RHCosts(SharedTensorDict):
 
@@ -1788,7 +1885,8 @@ class RhcInternal(SharedDataBase):
                 verbose: bool = False, 
                 vlevel: VLevel = VLevel.V0,
                 safe: bool = True,
-                force_reconnection: bool = False):
+                force_reconnection: bool = False,
+                optimize_mem: bool = False):
             
             basename = "RhcCosts"
 
@@ -1800,7 +1898,8 @@ class RhcInternal(SharedDataBase):
                     verbose = verbose, 
                     vlevel = vlevel,
                     safe = safe,
-                    force_reconnection = force_reconnection) 
+                    force_reconnection = force_reconnection,
+                    optimize_mem=optimize_mem) 
     
     class RHConstr(SharedTensorDict):
 
@@ -1813,7 +1912,8 @@ class RhcInternal(SharedDataBase):
                 verbose: bool = False, 
                 vlevel: VLevel = VLevel.V0,
                 safe: bool = True,
-                force_reconnection: bool = False):
+                force_reconnection: bool = False,
+                optimize_mem: bool = False):
             
             basename = "RhcConstraints"
 
@@ -1825,7 +1925,8 @@ class RhcInternal(SharedDataBase):
                     verbose = verbose, 
                     vlevel = vlevel,
                     safe = safe,
-                    force_reconnection = force_reconnection) 
+                    force_reconnection = force_reconnection,
+                    optimize_mem=optimize_mem) 
     
     class Config():
 
@@ -1972,7 +2073,8 @@ class RhcInternal(SharedDataBase):
             verbose: bool = False, 
             vlevel: VLevel = VLevel.V0,
             force_reconnection: bool = False,
-            safe: bool = True):
+            safe: bool = True,
+            optimize_mem: bool = False):
 
         self.rhc_index = rhc_index
         self._basename = "RhcInternal"
@@ -2014,7 +2116,8 @@ class RhcInternal(SharedDataBase):
                     verbose = verbose, 
                     vlevel = vlevel,
                     force_reconnection=force_reconnection,
-                    safe=safe)
+                    safe=safe,
+                    optimize_mem=optimize_mem)
         
         if self.config.enable_v:
             self.v = self.V(namespace = self.namespace,
@@ -2024,7 +2127,8 @@ class RhcInternal(SharedDataBase):
                     verbose = verbose, 
                     vlevel = vlevel,
                     force_reconnection=force_reconnection,
-                    safe=safe)
+                    safe=safe,
+                    optimize_mem=optimize_mem)
         
         if self.config.enable_a:
             self.a = self.A(namespace = self.namespace,
@@ -2034,7 +2138,8 @@ class RhcInternal(SharedDataBase):
                     verbose = verbose, 
                     vlevel = vlevel,
                     force_reconnection=force_reconnection,
-                    safe=safe)
+                    safe=safe,
+                    optimize_mem=optimize_mem)
         
         if self.config.enable_a_dot:
             self.a_dot = self.ADot(namespace = self.namespace,
@@ -2044,7 +2149,8 @@ class RhcInternal(SharedDataBase):
                     verbose = verbose, 
                     vlevel = vlevel,
                     force_reconnection=force_reconnection,
-                    safe=safe)
+                    safe=safe,
+                    optimize_mem=optimize_mem)
         
         if self.config.enable_f:
             self.f = self.F(namespace = self.namespace,
@@ -2054,7 +2160,8 @@ class RhcInternal(SharedDataBase):
                     verbose = verbose, 
                     vlevel = vlevel,
                     force_reconnection=force_reconnection,
-                    safe=safe)
+                    safe=safe,
+                    optimize_mem=optimize_mem)
             
         if self.config.enable_f_dot:
             self.f_dot = self.FDot(namespace = self.namespace,
@@ -2064,7 +2171,8 @@ class RhcInternal(SharedDataBase):
                     verbose = verbose, 
                     vlevel = vlevel,
                     force_reconnection=force_reconnection,
-                    safe=safe)
+                    safe=safe,
+                    optimize_mem=optimize_mem)
         
         if self.config.enable_eff:
             self.eff = self.Eff(namespace = self.namespace,
@@ -2074,7 +2182,8 @@ class RhcInternal(SharedDataBase):
                     verbose = verbose, 
                     vlevel = vlevel,
                     force_reconnection=force_reconnection,
-                    safe=safe)
+                    safe=safe,
+                    optimize_mem=optimize_mem)
             
         if self.config.enable_costs:
             self.costs = self.RHCosts(names = self.config.cost_names, # not needed if client
@@ -2085,7 +2194,8 @@ class RhcInternal(SharedDataBase):
                     verbose = verbose, 
                     vlevel = vlevel,
                     force_reconnection=force_reconnection,
-                    safe=safe)
+                    safe=safe,
+                    optimize_mem=optimize_mem)
         
         if self.config.enable_constr:
             self.cnstr = self.RHConstr(names = self.config.constr_names, # not needed if client
@@ -2096,7 +2206,8 @@ class RhcInternal(SharedDataBase):
                     verbose = verbose, 
                     vlevel = vlevel,
                     force_reconnection=force_reconnection,
-                    safe=safe)
+                    safe=safe,
+                    optimize_mem=optimize_mem)
         
         if self._is_server:
             self._shared_jnt_names = StringTensorServer(length = len(self._jnt_names), 

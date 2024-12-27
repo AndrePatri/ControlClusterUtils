@@ -27,7 +27,8 @@ class JntsState(SharedTWrapper):
             safe: bool = True,
             force_reconnection: bool = False,
             with_gpu_mirror: bool = False,
-            with_torch_view: bool = False):
+            with_torch_view: bool = False,
+            optimize_mem: bool = False):
         
         basename = "JntsState" 
 
@@ -70,7 +71,8 @@ class JntsState(SharedTWrapper):
             safe = safe,
             force_reconnection=force_reconnection,
             with_gpu_mirror=with_gpu_mirror,
-            with_torch_view=with_torch_view)
+            with_torch_view=with_torch_view,
+            optimize_mem=optimize_mem)
         
         # jnts
         self._q = None
@@ -275,7 +277,8 @@ class RootState(SharedTWrapper):
             force_reconnection: bool = False,
             with_gpu_mirror: bool = False,
             with_torch_view: bool = False,
-            fill_value = 0):
+            fill_value = 0,
+            optimize_mem: bool = False):
         
         basename = "RootState" 
         
@@ -300,7 +303,8 @@ class RootState(SharedTWrapper):
             safe = safe,
             force_reconnection=force_reconnection,
             with_gpu_mirror=with_gpu_mirror,
-            with_torch_view=with_torch_view)
+            with_torch_view=with_torch_view,
+            optimize_mem=optimize_mem)
         
         if q_remapping is not None:
             self.set_q_remapping(q_remapping)
@@ -529,7 +533,8 @@ class ContactWrenches(SharedTWrapper):
             force_reconnection: bool = False,
             with_gpu_mirror: bool = False,
             with_torch_view: bool = False,
-            fill_value = 0):
+            fill_value = 0,
+            optimize_mem: bool = False):
         
         basename = "ContactWrenches"
 
@@ -552,8 +557,10 @@ class ContactWrenches(SharedTWrapper):
                                         verbose = verbose, 
                                         vlevel = vlevel,
                                         safe = safe)
-            
-        n_cols = self.n_contacts * 6 # cart. force + torques
+        
+        n_cols=None # read from server if this is client
+        if is_server:
+            n_cols = self.n_contacts * 6 # cart. force + torques
 
         super().__init__(namespace = namespace,
             basename = basename,
@@ -567,7 +574,8 @@ class ContactWrenches(SharedTWrapper):
             safe = safe,
             force_reconnection=force_reconnection,
             with_gpu_mirror=with_gpu_mirror,
-            with_torch_view=with_torch_view)
+            with_torch_view=with_torch_view,
+            optimize_mem=optimize_mem)
 
         self._f = None
         self._t = None
@@ -742,7 +750,8 @@ class ContactPos(SharedTWrapper):
             force_reconnection: bool = False,
             with_gpu_mirror: bool = False,
             with_torch_view: bool = False,
-            fill_value = 0):
+            fill_value = 0,
+            optimize_mem: bool = False):
         
         basename = "ContactPos"
 
@@ -765,8 +774,10 @@ class ContactPos(SharedTWrapper):
                                         verbose = verbose, 
                                         vlevel = vlevel,
                                         safe = safe)
-            
-        n_cols = self.n_contacts * 3 # cartesian pos * n_contats
+        
+        n_cols=None
+        if is_server:
+            n_cols = self.n_contacts * 3 # cartesian pos * n_contats
 
         super().__init__(namespace = namespace,
             basename = basename,
@@ -780,7 +791,8 @@ class ContactPos(SharedTWrapper):
             safe = safe,
             force_reconnection=force_reconnection,
             with_gpu_mirror=with_gpu_mirror,
-            with_torch_view=with_torch_view)
+            with_torch_view=with_torch_view,
+            optimize_mem=optimize_mem)
 
         self._p=None
         self._p_x=None
@@ -960,7 +972,8 @@ class ContactVel(SharedTWrapper):
             force_reconnection: bool = False,
             with_gpu_mirror: bool = False,
             with_torch_view: bool = False,
-            fill_value = 0):
+            fill_value = 0,
+            optimize_mem: bool = False):
         
         basename = "ContactVel"
 
@@ -983,8 +996,10 @@ class ContactVel(SharedTWrapper):
                                         verbose = verbose, 
                                         vlevel = vlevel,
                                         safe = safe)
-            
-        n_cols = self.n_contacts * 3 # cartesian pos * n_contats
+        
+        n_cols=None
+        if is_server:
+            n_cols = self.n_contacts * 3 # cartesian pos * n_contats
 
         super().__init__(namespace = namespace,
             basename = basename,
@@ -998,7 +1013,8 @@ class ContactVel(SharedTWrapper):
             safe = safe,
             force_reconnection=force_reconnection,
             with_gpu_mirror=with_gpu_mirror,
-            with_torch_view=with_torch_view)
+            with_torch_view=with_torch_view,
+            optimize_mem=optimize_mem)
 
         self._v=None
         self._v_x=None
@@ -1182,7 +1198,8 @@ class FullRobState(SharedDataBase):
             safe: bool = True,
             verbose: bool = False,
             vlevel: VLevel = VLevel.V1,
-            fill_value = 0):
+            fill_value = 0,
+            optimize_mem: bool = False):
 
         self._namespace = namespace
         self._basename = basename
@@ -1217,7 +1234,8 @@ class FullRobState(SharedDataBase):
                             force_reconnection=self._force_reconnection,
                             with_gpu_mirror=with_gpu_mirror,
                             with_torch_view=with_torch_view,
-                            fill_value=fill_value)
+                            fill_value=fill_value,
+                            optimize_mem=optimize_mem)
     
         self.jnts_state = JntsState(namespace=self._namespace + self._basename, 
                             is_server=self._is_server,
@@ -1230,7 +1248,8 @@ class FullRobState(SharedDataBase):
                             force_reconnection=self._force_reconnection,
                             with_gpu_mirror=with_gpu_mirror,
                             with_torch_view=with_torch_view,
-                            fill_value=fill_value)
+                            fill_value=fill_value,
+                            optimize_mem=optimize_mem)
         
         self.contact_wrenches = ContactWrenches(namespace=self._namespace + self._basename, 
                             is_server=self._is_server,
@@ -1243,7 +1262,8 @@ class FullRobState(SharedDataBase):
                             force_reconnection=self._force_reconnection,
                             with_gpu_mirror=with_gpu_mirror,
                             with_torch_view=with_torch_view,
-                            fill_value=fill_value)
+                            fill_value=fill_value,
+                            optimize_mem=optimize_mem)
         
         self.contact_pos = ContactPos(namespace=self._namespace + self._basename, 
                             is_server=self._is_server,
@@ -1256,7 +1276,8 @@ class FullRobState(SharedDataBase):
                             force_reconnection=self._force_reconnection,
                             with_gpu_mirror=with_gpu_mirror,
                             with_torch_view=with_torch_view,
-                            fill_value=fill_value)
+                            fill_value=fill_value,
+                            optimize_mem=optimize_mem)
 
         self.contact_vel = ContactVel(namespace=self._namespace + self._basename, 
                             is_server=self._is_server,
@@ -1269,7 +1290,8 @@ class FullRobState(SharedDataBase):
                             force_reconnection=self._force_reconnection,
                             with_gpu_mirror=with_gpu_mirror,
                             with_torch_view=with_torch_view,
-                            fill_value=fill_value)
+                            fill_value=fill_value,
+                            optimize_mem=optimize_mem)
 
         self._is_running = False
     

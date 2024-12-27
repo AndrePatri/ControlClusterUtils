@@ -20,7 +20,8 @@ class ClusterCumulativeData(SharedTWrapper):
         n_dims: int = -1, 
         verbose: bool = False, 
         vlevel: VLevel = VLevel.V0,
-        force_reconnection: bool = False):
+        force_reconnection: bool = False,
+        optimize_mem: bool = False):
 
         basename = "ClusterCumulativeData" 
 
@@ -34,7 +35,8 @@ class ClusterCumulativeData(SharedTWrapper):
             dtype=eigenipc_dtype.Float,
             fill_value=np.nan,
             safe = True,
-            force_reconnection=force_reconnection)
+            force_reconnection=force_reconnection,
+            optimize_mem=optimize_mem)
         
 class RtiSolTime(SharedTWrapper):
                  
@@ -45,7 +47,8 @@ class RtiSolTime(SharedTWrapper):
         verbose: bool = False, 
         vlevel: VLevel = VLevel.V0,
         safe: bool = True,
-        force_reconnection: bool = False):
+        force_reconnection: bool = False,
+        optimize_mem: bool = False):
 
         basename = "RtiSolTime" 
 
@@ -59,7 +62,8 @@ class RtiSolTime(SharedTWrapper):
             dtype=eigenipc_dtype.Float,
             fill_value=np.nan,
             safe = safe,
-            force_reconnection=force_reconnection)
+            force_reconnection=force_reconnection,
+            optimize_mem=optimize_mem)
 
 class SolveLoopDt(SharedTWrapper):
                  
@@ -70,7 +74,8 @@ class SolveLoopDt(SharedTWrapper):
         verbose: bool = False, 
         vlevel: VLevel = VLevel.V0,
         safe: bool = True,
-        force_reconnection: bool = False):
+        force_reconnection: bool = False,
+        optimize_mem: bool = False):
 
         basename = "SolveLoopDt" 
 
@@ -84,7 +89,8 @@ class SolveLoopDt(SharedTWrapper):
             dtype=eigenipc_dtype.Float,
             fill_value=np.nan,
             safe = safe,
-            force_reconnection=force_reconnection)
+            force_reconnection=force_reconnection,
+            optimize_mem=optimize_mem)
      
 class PrbUpdateDt(SharedTWrapper):
                  
@@ -95,7 +101,8 @@ class PrbUpdateDt(SharedTWrapper):
         verbose: bool = False, 
         vlevel: VLevel = VLevel.V0,
         safe: bool = True,
-        force_reconnection: bool = False):
+        force_reconnection: bool = False,
+        optimize_mem: bool = False):
 
         basename = "PrbUpdateDt" 
 
@@ -109,7 +116,8 @@ class PrbUpdateDt(SharedTWrapper):
             dtype=eigenipc_dtype.Float,
             fill_value=np.nan,
             safe = safe,
-            force_reconnection=force_reconnection)
+            force_reconnection=force_reconnection,
+            optimize_mem=optimize_mem)
 
 class PhasesShiftDt(SharedTWrapper):
                  
@@ -120,7 +128,8 @@ class PhasesShiftDt(SharedTWrapper):
         verbose: bool = False, 
         vlevel: VLevel = VLevel.V0,
         safe: bool = True,
-        force_reconnection: bool = False):
+        force_reconnection: bool = False,
+        optimize_mem: bool = False):
 
         basename = "PhasesShiftDt" 
 
@@ -134,7 +143,8 @@ class PhasesShiftDt(SharedTWrapper):
             dtype=eigenipc_dtype.Float,
             fill_value=np.nan,
             safe = safe,
-            force_reconnection=force_reconnection)
+            force_reconnection=force_reconnection,
+            optimize_mem=optimize_mem)
 
 class TaskRefUpdateDt(SharedTWrapper):
                  
@@ -145,7 +155,8 @@ class TaskRefUpdateDt(SharedTWrapper):
         verbose: bool = False, 
         vlevel: VLevel = VLevel.V0,
         safe: bool = True,
-        force_reconnection: bool = False):
+        force_reconnection: bool = False,
+        optimize_mem: bool = False):
 
         basename = "TaskRefUpdateDt" 
 
@@ -159,7 +170,8 @@ class TaskRefUpdateDt(SharedTWrapper):
             dtype=eigenipc_dtype.Float,
             fill_value=np.nan,
             safe = safe,
-            force_reconnection=force_reconnection)
+            force_reconnection=force_reconnection,
+            optimize_mem=optimize_mem)
         
 class ClusterRuntimeInfoNames:
 
@@ -195,7 +207,8 @@ class RhcProfiling(SharedDataBase):
                 verbose: bool = False, 
                 vlevel: VLevel = VLevel.V2,
                 safe: bool = True,
-                force_reconnection: bool = False):
+                force_reconnection: bool = False,
+                optimize_mem: bool = False):
         
         self.cluster_size = cluster_size
         
@@ -231,7 +244,8 @@ class RhcProfiling(SharedDataBase):
                             n_dims = len(self.param_keys),
                             verbose = verbose, 
                             vlevel = vlevel,
-                            force_reconnection=force_reconnection)
+                            force_reconnection=force_reconnection,
+                            optimize_mem=optimize_mem)
 
         self.rti_sol_time = RtiSolTime(cluster_size= cluster_size, 
                             namespace = self.namespace,
@@ -239,7 +253,8 @@ class RhcProfiling(SharedDataBase):
                             verbose = verbose, 
                             vlevel = vlevel,
                             safe=False,
-                            force_reconnection=force_reconnection)
+                            force_reconnection=force_reconnection,
+                            optimize_mem=optimize_mem)
         
         self.solve_loop_dt = SolveLoopDt(cluster_size= cluster_size, 
                             namespace = self.namespace,
@@ -247,7 +262,8 @@ class RhcProfiling(SharedDataBase):
                             verbose = verbose, 
                             vlevel = vlevel,
                             safe=False,
-                            force_reconnection=force_reconnection)
+                            force_reconnection=force_reconnection,
+                            optimize_mem=optimize_mem)
         
         self.prb_update_dt = PrbUpdateDt(cluster_size= cluster_size, 
                             namespace = self.namespace,
@@ -255,7 +271,8 @@ class RhcProfiling(SharedDataBase):
                             verbose = verbose, 
                             vlevel = vlevel,
                             safe=False,
-                            force_reconnection=force_reconnection)
+                            force_reconnection=force_reconnection,
+                            optimize_mem=optimize_mem)
 
         self.phase_shift_dt = PhasesShiftDt(cluster_size= cluster_size, 
                             namespace = self.namespace,
@@ -263,7 +280,8 @@ class RhcProfiling(SharedDataBase):
                             verbose = verbose, 
                             vlevel = vlevel,
                             safe=False,
-                            force_reconnection=force_reconnection)
+                            force_reconnection=force_reconnection,
+                            optimize_mem=optimize_mem)
 
         self.task_ref_update_dt = TaskRefUpdateDt(cluster_size= cluster_size, 
                             namespace = self.namespace,
@@ -271,7 +289,8 @@ class RhcProfiling(SharedDataBase):
                             verbose = verbose, 
                             vlevel = vlevel,
                             safe=False,
-                            force_reconnection=force_reconnection)
+                            force_reconnection=force_reconnection,
+                            optimize_mem=optimize_mem)
         
         # names
         if self.is_server:
@@ -443,15 +462,21 @@ class RhcProfiling(SharedDataBase):
                 LogType.EXCEP,
                 throw_when_excep = True)
             
-    def synch_info(self):
+    def synch_info(self, row_index: int = 0):
 
-        self.shared_data.synch_all(read=True, retry = True)
+        self.shared_data.synch_all(read=True, retry = True, row_index=row_index, col_index=0)
+        print("AAAAAAAAAAAAAAAA")
+        print(self.shared_data.get_numpy_mirror())
+        print(self.param_values.shape)
+        print(self.shared_data.get_numpy_mirror().shape)
         self.param_values[:, :] = self.shared_data.get_numpy_mirror()
 
-    def synch_all(self):
+    def synch_all(self,
+            row_index: int = 0,
+            col_index: int = 0):
 
-        self.rti_sol_time.synch_all(read=True, retry = True)
-        self.solve_loop_dt.synch_all(read=True, retry = True)
+        self.rti_sol_time.synch_all(read=True, retry = True, row_index=row_index, col_index=col_index)
+        self.solve_loop_dt.synch_all(read=True, retry = True, row_index=row_index, col_index=col_index)
 
     def get_all_info(self):
 
