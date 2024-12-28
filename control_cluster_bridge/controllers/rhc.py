@@ -296,7 +296,7 @@ class RHController(ABC):
         if self._debug:
             self._start_time = time.perf_counter()
 
-        self.robot_state.synch_from_shared_mem() # updates robot state with
+        self.robot_state.synch_from_shared_mem(robot_idx=self.controller_index) # updates robot state with
         # latest data on shared mem
 
         self._compute_pred_delta()
@@ -341,7 +341,7 @@ class RHController(ABC):
 
     def _rhc_min(self):
 
-        self.robot_state.synch_from_shared_mem() # updates robot state with
+        self.robot_state.synch_from_shared_mem(self.controller_index) # updates robot state with
         # latest data on shared mem
 
         self._compute_pred_delta()
@@ -388,21 +388,25 @@ class RHController(ABC):
             # signal received -> we process incoming requests
             # perform reset, if required
             if self.rhc_status.resets.read_retry(row_index=self.controller_index,
-                                            col_index=0)[0]:
+                                    col_index=0,
+                                    row_index_view=0)[0]:
                 self.reset() # rhc is reset
             # check if a trigger request was received
             if self.rhc_status.trigger.read_retry(row_index=self.controller_index,
-                        col_index=0)[0]:
+                        col_index=0,
+                        row_index_view=0)[0]:
                 self._rhc() # run solution
                 self.rhc_status.trigger.write_retry(False, 
                     row_index=self.controller_index,
-                    col_index=0) # allow next solution trigger 
+                    col_index=0,
+                    row_index_view=0) # allow next solution trigger 
             
             self._remote_triggerer.ack() # send ack signal to server
             self._received_trigger = False
             
             self._term_req_received = self._term_req_received or self._remote_term.read_retry(row_index=0,
-                                                            col_index=0)[0]
+                                                            col_index=0,
+                                                            row_index_view=0)[0]
         self.close() # is not stricly necessary
 
     def reset(self):
@@ -412,11 +416,13 @@ class RHController(ABC):
             self._failed = False # allow triggering
             self._n_resets += 1
             self.rhc_status.fails.write_retry(False, 
-                                        row_index=self.controller_index,
-                                        col_index=0)
+                                    row_index=self.controller_index,
+                                    col_index=0,
+                                    row_index_view=0)
             self.rhc_status.resets.write_retry(False, 
-                                            row_index=self.controller_index,
-                                            col_index=0)
+                                    row_index=self.controller_index,
+                                    col_index=0,
+                                    row_index_view=0)
 
     def _create_jnt_maps(self):
         
@@ -551,7 +557,7 @@ class RHController(ABC):
                                     cluster_size=1 # we just need the row corresponding to this controller
                                     ) # profiling data
         self.cluster_stats.run()
-        self.cluster_stats.synch_info(row_index=self.controller_index)
+        self.cluster_stats.synch_info()
     
         self._create_jnt_maps()
         self.init_rhc_task_cmds() # initializes rhc interface to external commands (defined by child class)
@@ -689,7 +695,8 @@ class RHController(ABC):
             self.rhc_status.controllers_counter.data_sem_acquire()
             self.rhc_status.registration.write_retry(False, 
                                     row_index=self.controller_index,
-                                    col_index=0)
+                                    col_index=0,
+                                    row_index_view=0)
             self._deactivate()
             # decrementing controllers counter
             self.rhc_status.controllers_counter.synch_all(retry = True,
@@ -774,20 +781,23 @@ class RHController(ABC):
         # signal controller deactivation over shared mem
         self.rhc_status.activation_state.write_retry(False, 
                                 row_index=self.controller_index,
-                                col_index=0)
+                                col_index=0,
+                                row_index_view=0)
         # also set cmds to homing for safety
         # self.reset_rhc_data()
 
     def _on_failure(self):
         
         self.rhc_status.fails.write_retry(True, 
-                                        row_index=self.controller_index,
-                                        col_index=0)
+                                    row_index=self.controller_index,
+                                    col_index=0,
+                                    row_index_view=0)
         self._deactivate()
         self._n_fails += 1
         self.rhc_status.controllers_fail_counter.write_retry(self._n_fails,
-                                                    row_index=self.controller_index,
-                                                    col_index=0)
+                                    row_index=self.controller_index,
+                                    col_index=0,
+                                    row_index_view=0)
 
     def _init_robot_homer(self):
         self._homer = RobotHomer(srdf_path=self.srdf_path, 
@@ -802,19 +812,24 @@ class RHController(ABC):
         # with the latest info available
         self.cluster_stats.solve_loop_dt.write_retry(self._profiling_data_dict["full_solve_dt"], 
                                                             row_index=self.controller_index,
-                                                            col_index=0)
+                                                            col_index=0,
+                                                            row_index_view=0)
         self.cluster_stats.rti_sol_time.write_retry(self._profiling_data_dict["rti_solve_dt"], 
                                                             row_index=self.controller_index,
-                                                            col_index=0)
+                                                            col_index=0,
+                                                            row_index_view=0)
         self.cluster_stats.prb_update_dt.write_retry(self._profiling_data_dict["problem_update_dt"], 
                                                             row_index=self.controller_index,
-                                                            col_index=0)
+                                                            col_index=0,
+                                                            row_index_view=0)
         self.cluster_stats.phase_shift_dt.write_retry(self._profiling_data_dict["phases_shift_dt"], 
                                                             row_index=self.controller_index,
-                                                            col_index=0)
+                                                            col_index=0,
+                                                            row_index_view=0)
         self.cluster_stats.task_ref_update_dt.write_retry(self._profiling_data_dict["task_ref_update"], 
                                                             row_index=self.controller_index,
-                                                            col_index=0)
+                                                            col_index=0,
+                                                            row_index_view=0)
     
     def _write_cmds_from_sol(self):
 
@@ -877,22 +892,28 @@ class RHController(ABC):
         # we also fill other data (cost, constr. violation, etc..)
         self.rhc_status.rhc_cost.write_retry(self._get_rhc_cost(), 
                                     row_index=self.controller_index,
-                                    col_index=0)
+                                    col_index=0,
+                                    row_index_view=0)
         self.rhc_status.rhc_constr_viol.write_retry(self._get_rhc_constr_viol(), 
                                     row_index=self.controller_index,
-                                    col_index=0)
+                                    col_index=0,
+                                    row_index_view=0)
         self.rhc_status.rhc_n_iter.write_retry(self._get_rhc_niter_to_sol(), 
                                     row_index=self.controller_index,
-                                    col_index=0)
+                                    col_index=0,
+                                    row_index_view=0)
         self.rhc_status.rhc_nodes_cost.write_retry(data=self._get_rhc_nodes_cost(), 
-                                            row_index=self.controller_index, 
-                                            col_index=0)
+                                    row_index=self.controller_index, 
+                                    col_index=0,
+                                    row_index_view=0)
         self.rhc_status.rhc_nodes_constr_viol.write_retry(data=self._get_rhc_nodes_constr_viol(), 
-                                            row_index=self.controller_index, 
-                                            col_index=0)
+                                    row_index=self.controller_index, 
+                                    col_index=0,
+                                    row_index_view=0)
         self.rhc_status.rhc_fail_idx.write_retry(self._get_failure_index(), 
-                                        row_index=self.controller_index,
-                                        col_index=0) # write idx  on shared mem
+                                    row_index=self.controller_index,
+                                    col_index=0,
+                                    row_index_view=0) # write idx  on shared mem
 
     def _compute_pred_delta(self):
         # to be overriden by child (should write into self.rhc_pred_delta)

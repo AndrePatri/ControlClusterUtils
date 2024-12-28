@@ -1354,7 +1354,7 @@ class FullRobState(SharedDataBase):
         if not self._is_server:
 
             self._n_robots = self.jnts_state.n_robots
-
+            
             self._n_jnts = self.jnts_state.n_jnts
 
             self._n_contacts = self.contact_wrenches.n_contacts
@@ -1393,23 +1393,23 @@ class FullRobState(SharedDataBase):
             #torch.cuda.synchronize() # this way we ensure that after this the state on GPU
             # is fully updated
     
-    def synch_from_shared_mem(self):
+    def synch_from_shared_mem(self, robot_idx: int = 0):
 
         # reads from shared mem
-        self.root_state.synch_all(read = True, retry = True)
-        self.jnts_state.synch_all(read = True, retry = True)
-        self.contact_wrenches.synch_all(read = True, retry = True)
-        self.contact_pos.synch_all(read = True, retry = True)
-        self.contact_vel.synch_all(read = True, retry = True)
+        self.root_state.synch_all(read = True, retry = True, row_index_view=robot_idx)
+        self.jnts_state.synch_all(read = True, retry = True, row_index_view=robot_idx)
+        self.contact_wrenches.synch_all(read = True, retry = True, row_index_view=robot_idx)
+        self.contact_pos.synch_all(read = True, retry = True, row_index_view=robot_idx)
+        self.contact_vel.synch_all(read = True, retry = True, row_index_view=robot_idx)
 
-    def synch_to_shared_mem(self):
+    def synch_to_shared_mem(self, robot_idx: int = 0):
 
         # write to shared mem
-        self.root_state.synch_all(read = False, retry = True)
-        self.jnts_state.synch_all(read = False, retry = True)
-        self.contact_wrenches.synch_all(read = False, retry = True)
-        self.contact_pos.synch_all(read = False, retry = True)
-        self.contact_vel.synch_all(read = False, retry = True)
+        self.root_state.synch_all(read = False, retry = True, row_index_view=robot_idx)
+        self.jnts_state.synch_all(read = False, retry = True, row_index_view=robot_idx)
+        self.contact_wrenches.synch_all(read = False, retry = True, row_index_view=robot_idx)
+        self.contact_pos.synch_all(read = False, retry = True, row_index_view=robot_idx)
+        self.contact_vel.synch_all(read = False, retry = True, row_index_view=robot_idx)
         
     def close(self):
 

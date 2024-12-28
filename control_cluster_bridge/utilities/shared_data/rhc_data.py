@@ -1645,7 +1645,7 @@ class RhcStatus(SharedDataBase):
         self.rhc_fail_idx.run()
 
         if not self.is_server:
-            self.cluster_size = self.trigger.n_rows
+            self.cluster_size = self.trigger.getNRows()
             self.n_nodes = self.rhc_nodes_cost.n_cols
             self.n_contacts = int(self.rhc_fcn.n_cols / (3*self.n_nodes))
 
@@ -1898,8 +1898,7 @@ class RhcInternal(SharedDataBase):
                     verbose = verbose, 
                     vlevel = vlevel,
                     safe = safe,
-                    force_reconnection = force_reconnection,
-                    optimize_mem=optimize_mem) 
+                    force_reconnection = force_reconnection) 
     
     class RHConstr(SharedTensorDict):
 
@@ -1925,8 +1924,7 @@ class RhcInternal(SharedDataBase):
                     verbose = verbose, 
                     vlevel = vlevel,
                     safe = safe,
-                    force_reconnection = force_reconnection,
-                    optimize_mem=optimize_mem) 
+                    force_reconnection = force_reconnection) 
     
     class Config():
 

@@ -233,15 +233,15 @@ class RhcProfiling(SharedDataBase):
 
         self.static_param_dict = param_dict
 
+        n_dims=None
         if self.is_server:
-
             # if client info is read on shared memory
-
             self.param_keys = self.runtime_info.get() + list(self.static_param_dict.keys())
+            n_dims=len(self.param_keys)
 
         self.shared_data = ClusterCumulativeData(namespace = self.namespace,
                             is_server = is_server, 
-                            n_dims = len(self.param_keys),
+                            n_dims = n_dims,
                             verbose = verbose, 
                             vlevel = vlevel,
                             force_reconnection=force_reconnection,
@@ -363,15 +363,14 @@ class RhcProfiling(SharedDataBase):
                         "Could not read shared sim names on shared memory. Retrying...",
                         LogType.WARN,
                         throw_when_excep = True)
-                    
-            self.shared_data.synch_all(read=True, retry=True)
             
+            self.shared_data.synch_all(read=True, retry=True)
             # wait flag since safe = False doesn't do anything
             self.rti_sol_time.synch_all(read=True, retry=True)
 
             self.solve_loop_dt.synch_all(read=True, retry=True)
 
-            self.cluster_size = self.rti_sol_time.n_rows
+            self.cluster_size = self.rti_sol_time.getNRows()
             
         self.param_values = np.full((len(self.param_keys), 1), 
                                 fill_value=np.nan, 
@@ -465,10 +464,6 @@ class RhcProfiling(SharedDataBase):
     def synch_info(self, row_index: int = 0):
 
         self.shared_data.synch_all(read=True, retry = True, row_index=row_index, col_index=0)
-        print("AAAAAAAAAAAAAAAA")
-        print(self.shared_data.get_numpy_mirror())
-        print(self.param_values.shape)
-        print(self.shared_data.get_numpy_mirror().shape)
         self.param_values[:, :] = self.shared_data.get_numpy_mirror()
 
     def synch_all(self,
