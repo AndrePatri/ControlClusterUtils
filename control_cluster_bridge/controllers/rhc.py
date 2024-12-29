@@ -513,17 +513,20 @@ class RHController(ABC):
 
         # increment controllers counter
         controllers_counter += 1 
-
+        self.controller_index = controllers_counter.item() -1 
+        
         # actually register to cluster
         self.rhc_status.controllers_counter.synch_all(retry = True,
-            read = False) # writes to shared mem
+            read = False) # writes to shared mem (just one for all controllers (i.e n_rows = 1))
         
         # read current registration state
         self.rhc_status.registration.synch_all(retry = True,
-                                                read = True)
+                                        read = True,
+                                        row_index=self.controller_index,
+                                        row_index_view=0)
         registrations = self.rhc_status.registration.get_numpy_mirror()
         # self.controller_index = self._assign_cntrl_index(registrations)
-        self.controller_index = controllers_counter.item() -1 
+        
 
         self._class_name_base = self._class_name_base+str(self.controller_index)
         # self.controller_index_np = np.array(self.controller_index)
@@ -533,7 +536,8 @@ class RHController(ABC):
         self.rhc_status.registration.synch_all(retry = True,
                                         read = False,
                                         row_index=self.controller_index,
-                                        col_index=0) 
+                                        col_index=0,
+                                        row_index_view=0) 
 
         # now all heavy stuff that would otherwise make the registration slow
         self._remote_term = SharedTWrapper(namespace=self.namespace,
@@ -570,10 +574,10 @@ class RHController(ABC):
         self._contact_f_scale = self._get_robot_mass() * 9.81
 
         # writing some static info about this controller
-        self.rhc_status.rhc_static_info.synch_all(retry = True,
-            read = True,
-            row_index=self.controller_index,
-            col_index=0) # first read current static info from other controllers
+        # self.rhc_status.rhc_static_info.synch_all(retry = True,
+        #     read = True,
+        #     row_index=self.controller_index,
+        #     col_index=0) # first read current static info from other controllers (not necessary if optimize_mem==True)
         self.rhc_status.rhc_static_info.set(data=np.array(self._dt),
             data_type="dts",
             rhc_idxs=self.controller_index_np,
@@ -601,7 +605,9 @@ class RHController(ABC):
             gpu=False)
         
         self.rhc_status.rhc_static_info.synch_retry(row_index=self.controller_index, 
-            col_index=0, n_rows=1, n_cols=self.rhc_status.rhc_static_info.n_cols,
+            col_index=0,
+            row_index_view=0,
+            n_rows=1, n_cols=self.rhc_status.rhc_static_info.n_cols,
             read=False)
         
         # we set homings also for joints which are not in the rhc homing map
@@ -624,7 +630,8 @@ class RHController(ABC):
                             no_remap=True)
         
         # write all joints (including homing for env-only ones)
-        self.robot_cmds.jnts_state.synch_retry(row_index=self.controller_index, col_index=0, 
+        self.robot_cmds.jnts_state.synch_retry(row_index=self.controller_index, col_index=0,
+                                row_index_view=0,
                                 n_rows=1, n_cols=self.robot_cmds.jnts_state.n_cols,
                                 read=False) # only write data corresponding to this controller
         
@@ -876,17 +883,27 @@ class RHController(ABC):
         self.robot_pred.root_state.set(data=self._get_norm_grav_vector_from_sol(node_idx=self._pred_node_idx-1), data_type="gn", robot_idxs=self.controller_index_np)
 
         # write robot commands
-        self.robot_cmds.jnts_state.synch_retry(row_index=self.controller_index, col_index=0, n_rows=1, n_cols=self.robot_cmds.jnts_state.n_cols,
+        self.robot_cmds.jnts_state.synch_retry(row_index=self.controller_index, col_index=0, 
+                                row_index_view=0,
+                                n_rows=1, n_cols=self.robot_cmds.jnts_state.n_cols,
                                 read=False) # jnt state
-        self.robot_cmds.root_state.synch_retry(row_index=self.controller_index, col_index=0, n_rows=1, n_cols=self.robot_cmds.root_state.n_cols,
+        self.robot_cmds.root_state.synch_retry(row_index=self.controller_index, col_index=0, 
+                                row_index_view=0,
+                                n_rows=1, n_cols=self.robot_cmds.root_state.n_cols,
                                 read=False) # root state, in case it was written
-        self.robot_cmds.contact_wrenches.synch_retry(row_index=self.controller_index, col_index=0, n_rows=1, n_cols=self.robot_cmds.contact_wrenches.n_cols,
+        self.robot_cmds.contact_wrenches.synch_retry(row_index=self.controller_index, col_index=0, 
+                                row_index_view=0,
+                                n_rows=1, n_cols=self.robot_cmds.contact_wrenches.n_cols,
                                 read=False) # contact state
         
         # write robot pred
-        self.robot_pred.jnts_state.synch_retry(row_index=self.controller_index, col_index=0, n_rows=1, n_cols=self.robot_cmds.jnts_state.n_cols,
+        self.robot_pred.jnts_state.synch_retry(row_index=self.controller_index, col_index=0, 
+                                row_index_view=0,
+                                n_rows=1, n_cols=self.robot_cmds.jnts_state.n_cols,
                                 read=False)
-        self.robot_pred.root_state.synch_retry(row_index=self.controller_index, col_index=0, n_rows=1, n_cols=self.robot_cmds.root_state.n_cols,
+        self.robot_pred.root_state.synch_retry(row_index=self.controller_index, col_index=0, 
+                                row_index_view=0,
+                                n_rows=1, n_cols=self.robot_cmds.root_state.n_cols,
                                 read=False)
         
         # we also fill other data (cost, constr. violation, etc..)
@@ -916,11 +933,53 @@ class RHController(ABC):
                                     row_index_view=0) # write idx  on shared mem
 
     def _compute_pred_delta(self):
-        # to be overriden by child (should write into self.rhc_pred_delta)
-        # compute errors between the rhc prediction and the 
-        # measurements. Can be useful to debug errors in measurements 
-        # and also develop correcting/estimation techniques
-        pass
+        
+        # measurements
+        q_full_root_meas = self.robot_state.root_state.get(data_type="q_full", robot_idxs=self.controller_index_np)
+        twist_root_meas = self.robot_state.root_state.get(data_type="twist", robot_idxs=self.controller_index_np)
+        a_root_meas = self.robot_state.root_state.get(data_type="a_full", robot_idxs=self.controller_index_np)
+        g_vec_root_meas = self.robot_state.root_state.get(data_type="gn", robot_idxs=self.controller_index_np)
+
+        q_jnts_meas = self.robot_state.jnts_state.get(data_type="q", robot_idxs=self.controller_index_np)
+        v_jnts_meas = self.robot_state.jnts_state.get(data_type="v", robot_idxs=self.controller_index_np)
+        a_jnts_meas = self.robot_state.jnts_state.get(data_type="a", robot_idxs=self.controller_index_np)
+        eff_jnts_meas = self.robot_state.jnts_state.get(data_type="eff", robot_idxs=self.controller_index_np)
+
+        # prediction from rhc 
+        delta_root_q_full=self._get_root_full_q_from_sol(node_idx=1)-q_full_root_meas
+        delta_root_twist=self._get_root_twist_from_sol(node_idx=1)-twist_root_meas
+        delta_root_a=self._get_root_a_from_sol(node_idx=0)-a_root_meas
+        delta_g_vec=self._get_norm_grav_vector_from_sol(node_idx=0)-g_vec_root_meas
+
+        delta_jnts_q=self._get_jnt_q_from_sol(node_idx=1)-q_jnts_meas
+        delta_jnts_v=self._get_jnt_v_from_sol(node_idx=1)-v_jnts_meas
+        delta_jnts_a=self._get_jnt_a_from_sol(node_idx=0)-a_jnts_meas
+        delta_jnts_eff=self._get_jnt_eff_from_sol(node_idx=0)-eff_jnts_meas
+
+        # writing pred. errors
+        self.rhc_pred_delta.root_state.set(data=delta_root_q_full, data_type="q_full", robot_idxs=self.controller_index_np)
+        self.rhc_pred_delta.root_state.set(data=delta_root_twist,data_type="twist", robot_idxs=self.controller_index_np)
+        self.rhc_pred_delta.root_state.set(data=delta_root_a,data_type="a_full", robot_idxs=self.controller_index_np)
+        self.rhc_pred_delta.root_state.set(data=delta_g_vec, data_type="gn", robot_idxs=self.controller_index_np)
+
+        self.rhc_pred_delta.jnts_state.set(data=delta_jnts_q,data_type="q", robot_idxs=self.controller_index_np)
+        self.rhc_pred_delta.jnts_state.set(data=delta_jnts_v,data_type="v", robot_idxs=self.controller_index_np)
+        self.rhc_pred_delta.jnts_state.set(data=delta_jnts_a,data_type="a", robot_idxs=self.controller_index_np)
+        self.rhc_pred_delta.jnts_state.set(data=delta_jnts_eff, data_type="eff", robot_idxs=self.controller_index_np)
+
+        # write on shared memory
+        self.rhc_pred_delta.jnts_state.synch_retry(row_index=self.controller_index, 
+                                                   col_index=0, 
+                                                   n_rows=1, 
+                                                   row_index_view=0,
+                                                   n_cols=self.robot_cmds.jnts_state.n_cols,
+                                read=False) # jnt state
+        self.rhc_pred_delta.root_state.synch_retry(row_index=self.controller_index, 
+                                                    col_index=0,
+                                                    n_rows=1, 
+                                                    row_index_view=0,
+                                                    n_cols=self.robot_cmds.root_state.n_cols,
+                                read=False) # root state
     
     def _assign_controller_side_jnt_names(self, 
                         jnt_names: List[str]):

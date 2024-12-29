@@ -233,7 +233,7 @@ class RhcRefs(SharedDataBase):
             safe: bool = True,
             optimize_mem: bool = False):
         
-            basename = basename + "Phase" # hardcoded
+            basename = basename + "PhaseMode" # hardcoded
 
             super().__init__(namespace = namespace,
                 basename = basename,
@@ -647,7 +647,7 @@ class RhcRefs(SharedDataBase):
         
         self._optimize_mem=optimize_mem
 
-        self.basename = "Rhc"
+        self.basename = "RhcRefs"
 
         self.is_server = is_server
 
@@ -684,38 +684,6 @@ class RhcRefs(SharedDataBase):
                                     fill_value=fill_value,
                                     optimize_mem=optimize_mem)
         
-        self.phase_id = self.Phase(namespace=namespace,
-                            basename=self.basename,
-                            is_server=is_server,
-                            n_robots=n_robots,
-                            verbose=verbose,
-                            vlevel=vlevel,
-                            force_reconnection=force_reconnection,
-                            with_gpu_mirror=with_gpu_mirror,
-                            with_torch_view=with_torch_view,
-                            safe=safe,
-                            optimize_mem=optimize_mem)
-        
-        self.alpha = self.AlphaView(namespace=namespace, 
-                                is_server=is_server, 
-                                cluster_size=n_robots, 
-                                verbose=verbose, 
-                                vlevel=vlevel,
-                                force_reconnection=force_reconnection,
-                                with_gpu_mirror=with_gpu_mirror,
-                                with_torch_view=with_torch_view,
-                                optimize_mem=optimize_mem)
-        
-        self.bound_rel = self.BoundRelaxView(namespace=namespace, 
-                                is_server=is_server, 
-                                cluster_size=n_robots, 
-                                verbose=verbose, 
-                                vlevel=vlevel,
-                                force_reconnection=force_reconnection,
-                                with_gpu_mirror=with_gpu_mirror,
-                                with_torch_view=with_torch_view,
-                                optimize_mem=optimize_mem)
-        
         self.contact_flags = None
 
         self._is_runnning = False
@@ -740,18 +708,13 @@ class RhcRefs(SharedDataBase):
     def run(self):
 
         self.rob_refs.run()
-        self.phase_id.run()
-        self.alpha.run()
-        self.bound_rel.run()
 
         self._n_contacts = self.rob_refs.n_contacts()
-        
-        self.n_robots = self.rob_refs.n_robots()    
         
         self.contact_flags = self.ContactFlag(namespace=self.namespace,
                             basename=self.basename,
                             is_server=self.is_server,
-                            n_robots=self.n_robots,
+                            n_robots=self.rob_refs.root_state.n_rows,
                             n_contacts=self._n_contacts,
                             verbose=self.verbose,
                             vlevel=self.vlevel,
@@ -764,7 +727,7 @@ class RhcRefs(SharedDataBase):
 
         self.flight_info = self.FlightInfo(namespace=self.namespace,
                             is_server=self.is_server,
-                            n_robots=self.n_robots,
+                            n_robots=self.rob_refs.root_state.n_rows,
                             n_contacts=self._n_contacts,
                             verbose=self.verbose,
                             vlevel=self.vlevel,
@@ -777,7 +740,7 @@ class RhcRefs(SharedDataBase):
 
         self.flight_settings = self.FlightSettings(namespace=self.namespace,
                             is_server=self.is_server,
-                            n_robots=self.n_robots,
+                            n_robots=self.rob_refs.root_state.n_rows,
                             n_contacts=self._n_contacts,
                             verbose=self.verbose,
                             vlevel=self.vlevel,
@@ -787,6 +750,39 @@ class RhcRefs(SharedDataBase):
                             safe=self.safe,
                             optimize_mem=self._optimize_mem)
         self.flight_settings.run()
+        
+        self.phase_id = self.Phase(namespace=self.namespace,
+                            basename=self.basename,
+                            is_server=self.is_server,
+                            n_robots=self.rob_refs.root_state.n_rows,
+                            verbose=self.verbose,
+                            vlevel=self.vlevel,
+                            force_reconnection=self.force_reconnection,
+                            with_gpu_mirror=self._with_gpu_mirror,
+                            with_torch_view=self._with_torch_view,
+                            safe=self.safe,
+                            optimize_mem=self._optimize_mem)
+        self.phase_id.run()
+        self.alpha = self.AlphaView(namespace=self.namespace,
+                            is_server=self.is_server,
+                            cluster_size=self.rob_refs.root_state.n_rows,
+                            verbose=self.verbose,
+                            vlevel=self.vlevel,
+                            force_reconnection=self.force_reconnection,
+                            with_gpu_mirror=self._with_gpu_mirror,
+                            with_torch_view=self._with_torch_view,
+                            optimize_mem=self._optimize_mem)
+        self.alpha.run()
+        self.bound_rel = self.BoundRelaxView(namespace=self.namespace,
+                            is_server=self.is_server,
+                            cluster_size=self.rob_refs.root_state.n_rows,
+                            verbose=self.verbose,
+                            vlevel=self.vlevel,
+                            force_reconnection=self.force_reconnection,
+                            with_gpu_mirror=self._with_gpu_mirror,
+                            with_torch_view=self._with_torch_view,
+                            optimize_mem=self._optimize_mem)
+        self.bound_rel.run()
 
         self._is_runnning = True
     

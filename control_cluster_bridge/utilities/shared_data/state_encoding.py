@@ -1307,8 +1307,7 @@ class FullRobState(SharedDataBase):
             self.contact_vel.get_shared_mem()]
     
     def n_robots(self):
-
-        return self._n_robots
+        return self.root_state.getNRows()
     
     def n_jnts(self):
 
