@@ -296,7 +296,7 @@ class RHController(ABC):
         if self._debug:
             self._start_time = time.perf_counter()
 
-        self.robot_state.synch_from_shared_mem(robot_idx=self.controller_index) # updates robot state with
+        self.robot_state.synch_from_shared_mem(robot_idx=self.controller_index, robot_idx_view=self.controller_index_np) # updates robot state with
         # latest data on shared mem
 
         self._compute_pred_delta()
@@ -341,7 +341,7 @@ class RHController(ABC):
 
     def _rhc_min(self):
 
-        self.robot_state.synch_from_shared_mem(self.controller_index) # updates robot state with
+        self.robot_state.synch_from_shared_mem(robot_idx=self.controller_index, robot_idx_view=self.controller_index_np) # updates robot state with
         # latest data on shared mem
 
         self._compute_pred_delta()
