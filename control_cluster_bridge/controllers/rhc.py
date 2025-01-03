@@ -69,8 +69,8 @@ class RHController(ABC):
         self._verbose = verbose
         self._debug = debug
 
-        if self._debug:
-            np.seterr(over='ignore')
+        # if not self._debug:
+        np.seterr(over='ignore') # ignoring overflows
 
         self._n_nodes = n_nodes
         self._dt = dt
@@ -293,8 +293,7 @@ class RHController(ABC):
     
     def _rhc_db(self):
         # rhc with debug data
-        if self._debug:
-            self._start_time = time.perf_counter()
+        self._start_time = time.perf_counter()
 
         self.robot_state.synch_from_shared_mem(robot_idx=self.controller_index, robot_idx_view=self.controller_index_np) # updates robot state with
         # latest data on shared mem
@@ -326,18 +325,17 @@ class RHController(ABC):
         self._write_cmds_from_sol() # we update update the views of the cmds
         # from the latest solution
     
-        if self._debug:
-            # if in debug, rhc internal state is streamed over 
-            # shared mem.
-            self._update_rhc_internal()
-            self._profiling_data_dict["full_solve_dt"] = time.perf_counter() - self._start_time
-            self._update_profiling_data() # updates all profiling data
-            if self._verbose:
-                Journal.log(self._class_name_base,
-                    "solve",
-                    f"RHC full solve loop execution time  -> " + str(self._profiling_data_dict["full_solve_dt"]),
-                    LogType.INFO,
-                    throw_when_excep = True) 
+        # in debug, rhc internal state is streamed over 
+        # shared mem.
+        self._update_rhc_internal()
+        self._profiling_data_dict["full_solve_dt"] = time.perf_counter() - self._start_time
+        self._update_profiling_data() # updates all profiling data
+        if self._verbose:
+            Journal.log(self._class_name_base,
+                "solve",
+                f"RHC full solve loop execution time  -> " + str(self._profiling_data_dict["full_solve_dt"]),
+                LogType.INFO,
+                throw_when_excep = True) 
 
     def _rhc_min(self):
 
