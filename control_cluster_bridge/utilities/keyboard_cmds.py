@@ -29,10 +29,41 @@ import numpy as np
 
 class RefsFromKeyboard:
 
+    def parse_contact_mapping(self, mapping_str):
+        """
+        Parses a string formatted like "0;1;3;2 " and extracts the numbers as a list of integers.
+        Returns None if the input string is invalid.
+        
+        Args:
+            mapping_str (str): The input string containing numbers separated by semicolons.
+            
+        Returns:
+            List[int] or None: A list of integers extracted from the input string, or None if invalid.
+        """
+        try:
+            # Strip any surrounding whitespace
+            mapping_str = mapping_str.strip()
+            
+            # Split by semicolons and check for validity
+            parts = mapping_str.split(';')
+            if not all(part.isdigit() for part in parts if part):  # Ensure all parts are valid integers
+                return None
+            
+            # Convert to integers and return as a list
+            return [int(num) for num in parts if num]
+        except Exception:
+            # Catch any unexpected errors and return None
+            return None
+
     def __init__(self, 
         namespace: str,
         shared_refs, 
-        verbose = False):
+        verbose = False,
+        contact_mapping: str = ""):
+
+        self._contact_mapping=self.parse_contact_mapping(contact_mapping)
+        if self._contact_mapping is None:
+            self._contact_mapping=[0, 1, 2, 3] # key 7-9-1-3
 
         n_contacts=4
         
@@ -278,13 +309,13 @@ class RefsFromKeyboard:
                 is_contact: bool = True):
         contact_flags = self._shared_refs.contact_flags.get_numpy_mirror()
         if key.char == "7":
-            contact_flags[self.cluster_idx, 0] = is_contact
+            contact_flags[self.cluster_idx, self._contact_mapping[0]] = is_contact
         if key.char == "9":
-            contact_flags[self.cluster_idx, 1] = is_contact
+            contact_flags[self.cluster_idx, self._contact_mapping[1]] = is_contact
         if key.char == "1":
-            contact_flags[self.cluster_idx, 2] = is_contact
+            contact_flags[self.cluster_idx, self._contact_mapping[2]] = is_contact
         if key.char == "3":
-            contact_flags[self.cluster_idx, 3] = is_contact
+            contact_flags[self.cluster_idx, self._contact_mapping[3]] = is_contact
     
     def _set_flight_params(self,
         key):
