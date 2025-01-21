@@ -59,7 +59,10 @@ class RefsFromKeyboard:
         namespace: str,
         shared_refs, 
         verbose = False,
-        contact_mapping: str = ""):
+        contact_mapping: str = "",
+        env_idx: int = None):
+
+        self._env_idx=env_idx
 
         self._contact_mapping=self.parse_contact_mapping(contact_mapping)
         if self._contact_mapping is None:
@@ -121,15 +124,17 @@ class RefsFromKeyboard:
         
         self.launch_keyboard_cmds.run()
 
-        self.env_index = SharedTWrapper(namespace = self.namespace,
-                basename = "EnvSelector",
-                is_server = False, 
-                verbose = True, 
-                vlevel = VLevel.V2,
-                safe = False,
-                dtype=dtype.Int)
+        self.env_index=None
+        if self._env_idx is None:
+            self.env_index = SharedTWrapper(namespace = self.namespace,
+                    basename = "EnvSelector",
+                    is_server = False, 
+                    verbose = True, 
+                    vlevel = VLevel.V2,
+                    safe = False,
+                    dtype=dtype.Int)
         
-        self.env_index.run()
+            self.env_index.run()
         
         self._init_ref_subscriber()
 
@@ -158,10 +163,12 @@ class RefsFromKeyboard:
             read = True):
         
         if read:
-
-            self.env_index.synch_all(read=True, retry=True)
-            env_index = self.env_index.get_numpy_mirror()
-            self.cluster_idx = env_index[0, 0].item()
+            
+            if self.env_index is None:
+                self.env_index.synch_all(read=True, retry=True)
+                env_index = self.env_index.get_numpy_mirror()
+                self._env_idx=env_index[0, 0].item()
+            self.cluster_idx = self._env_idx
             self.cluster_idx_np = self.cluster_idx
         
             self._shared_refs.rob_refs.synch_from_shared_mem()
@@ -699,6 +706,7 @@ class RefsFromKeyboard:
 if __name__ == "__main__":  
 
     keyb_cmds = RefsFromKeyboard(namespace="kyon0", 
-                            verbose=True)
+                            verbose=True,
+                            env_idx=0)
 
     keyb_cmds.run()
