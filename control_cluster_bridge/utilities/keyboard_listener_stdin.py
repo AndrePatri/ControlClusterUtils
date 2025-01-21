@@ -45,11 +45,14 @@ class KeyListenerStdin:
 
     def stop(self):
         """Stop the listener thread."""
-        self.done = True
-        if self.listener_thread:
-            self.listener_thread.join()
-        if self.release_thread:
-            self.release_thread.join()
+        if not self.done:
+            self.done = True
+            if self.listener_thread:
+                if self.listener_thread.is_alive():
+                    self.listener_thread.join()
+            if self.release_thread:
+                if self.release_thread.is_alive():
+                    self.release_thread.join()
 
     def _listen_keys(self):
         """Thread to listen for key events."""
@@ -70,8 +73,8 @@ class KeyListenerStdin:
             if self.on_press:
                 self.on_press(key)
 
-        # Exit the program if 'E' is pressed
-        if key.lower() == 'E':
+        # Exit the program if 'X' is pressed
+        if key == 'X':
             print("Exiting...")
             self.stop()
 

@@ -679,7 +679,6 @@ class RefsFromKeyboard:
             self._synch(read=False)
 
     def _on_release(self, key):
-
         cmds_active=True
         if self.launch_keyboard_cmds is not None:
             cmds_active=self.launch_keyboard_cmds.read_retry(row_index=0,
@@ -694,9 +693,6 @@ class RefsFromKeyboard:
 
             self._set_contacts(key=key, 
                     is_contact=True)
-
-            if key == "E":
-                self._close()
 
             self._synch(read=False)
 
