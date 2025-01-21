@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with CoClusterBridge.  If not, see <http://www.gnu.org/licenses/>.
 # 
-from pynput import keyboard
-from pynput.keyboard import Key
 
 from EigenIPC.PyEigenIPCExt.wrappers.shared_data_view import SharedTWrapper
 from EigenIPC.PyEigenIPC import VLevel
@@ -60,9 +58,12 @@ class RefsFromKeyboard:
         shared_refs, 
         verbose = False,
         contact_mapping: str = "",
-        env_idx: int = None):
+        env_idx: int = None,
+        ssh_mode: bool = False):
 
         self._env_idx=env_idx
+
+        self._ssh_mode=ssh_mode
 
         self._contact_mapping=self.parse_contact_mapping(contact_mapping)
         if self._contact_mapping is None:
@@ -114,7 +115,11 @@ class RefsFromKeyboard:
 
     def _init_shared_data(self):
 
-        self.launch_keyboard_cmds = SharedTWrapper(namespace = self.namespace,
+        self.env_index=None
+        self.launch_keyboard_cmds=None
+        if self._env_idx is None:
+            # for detecting when commands are active
+            self.launch_keyboard_cmds = SharedTWrapper(namespace = self.namespace,
                 basename = "KeyboardCmdsLauncher",
                 is_server = False, 
                 verbose = True, 
@@ -122,10 +127,9 @@ class RefsFromKeyboard:
                 safe = False,
                 dtype=dtype.Bool)
         
-        self.launch_keyboard_cmds.run()
+            self.launch_keyboard_cmds.run()
 
-        self.env_index=None
-        if self._env_idx is None:
+            # for sending to specific env
             self.env_index = SharedTWrapper(namespace = self.namespace,
                     basename = "EnvSelector",
                     is_server = False, 
@@ -163,8 +167,7 @@ class RefsFromKeyboard:
             read = True):
         
         if read:
-            
-            if self.env_index is None:
+            if self.env_index is not None:
                 self.env_index.synch_all(read=True, retry=True)
                 env_index = self.env_index.get_numpy_mirror()
                 self._env_idx=env_index[0, 0].item()
@@ -315,19 +318,19 @@ class RefsFromKeyboard:
                 key,
                 is_contact: bool = True):
         contact_flags = self._shared_refs.contact_flags.get_numpy_mirror()
-        if key.char == "7":
+        if key == "7":
             contact_flags[self.cluster_idx, self._contact_mapping[0]] = is_contact
-        if key.char == "9":
+        if key == "9":
             contact_flags[self.cluster_idx, self._contact_mapping[1]] = is_contact
-        if key.char == "1":
+        if key == "1":
             contact_flags[self.cluster_idx, self._contact_mapping[2]] = is_contact
-        if key.char == "3":
+        if key == "3":
             contact_flags[self.cluster_idx, self._contact_mapping[3]] = is_contact
     
     def _set_flight_params(self,
         key):
 
-        if key.char=="F":
+        if key=="F":
             self._enable_flight_param_change = not self._enable_flight_param_change
             info = f"Flight params change enabled: {self._enable_flight_param_change}"
             Journal.log(self.__class__.__name__,
@@ -336,7 +339,7 @@ class RefsFromKeyboard:
                 LogType.INFO,
                 throw_when_excep = True)
         
-        if key.char=="L":
+        if key=="L":
             self._d_flength_enabled=not self._d_flength_enabled
             info = f"Flight length change enabled: {self._d_flength_enabled}"
             Journal.log(self.__class__.__name__,
@@ -344,7 +347,7 @@ class RefsFromKeyboard:
                 info,
                 LogType.INFO,
                 throw_when_excep = True)
-        if key.char=="A":
+        if key=="A":
             self._d_fapex_enabled=not self._d_fapex_enabled
             info = f"Flight apex change enabled: {self._d_fapex_enabled}"
             Journal.log(self.__class__.__name__,
@@ -352,7 +355,7 @@ class RefsFromKeyboard:
                 info,
                 LogType.INFO,
                 throw_when_excep = True)
-        if key.char=="E":
+        if key=="E":
             self._d_fend_enabled=not self._d_fend_enabled
             info = f"Flight end change enabled: {self._d_fend_enabled}"
             Journal.log(self.__class__.__name__,
@@ -361,7 +364,7 @@ class RefsFromKeyboard:
                 LogType.INFO,
                 throw_when_excep = True)
             
-        if key.char=="o":
+        if key=="o":
             self._d_fparam_enabled_contact_i[0]=not self._d_fparam_enabled_contact_i[0]
             info = f"Flight params change enabled: {self._d_fparam_enabled_contact_i[0]} for contact 0"
             Journal.log(self.__class__.__name__,
@@ -369,7 +372,7 @@ class RefsFromKeyboard:
                 info,
                 LogType.INFO,
                 throw_when_excep = True)
-        if key.char=="p":
+        if key=="p":
             self._d_fparam_enabled_contact_i[1]=not self._d_fparam_enabled_contact_i[1]
             info = f"Flight params change enabled: {self._d_fparam_enabled_contact_i[1]} for contact 1"
             Journal.log(self.__class__.__name__,
@@ -377,7 +380,7 @@ class RefsFromKeyboard:
                 info,
                 LogType.INFO,
                 throw_when_excep = True)
-        if key.char=="k":
+        if key=="k":
             self._d_fparam_enabled_contact_i[2]=not self._d_fparam_enabled_contact_i[2]
             info = f"Flight params change enabled: {self._d_fparam_enabled_contact_i[2]} for contact 2"
             Journal.log(self.__class__.__name__,
@@ -385,7 +388,7 @@ class RefsFromKeyboard:
                 info,
                 LogType.INFO,
                 throw_when_excep = True)
-        if key.char=="l":
+        if key=="l":
             self._d_fparam_enabled_contact_i[3]=not self._d_fparam_enabled_contact_i[3]
             info = f"Flight params change enabled: {self._d_fparam_enabled_contact_i[3]} for contact 3"
             Journal.log(self.__class__.__name__,
@@ -394,7 +397,7 @@ class RefsFromKeyboard:
                 LogType.INFO,
                 throw_when_excep = True)
             
-        if key.char=="+":
+        if key=="+":
             if self._d_fparam_enabled_contact_i[0]:
                 self._update_flight_params(contact_idx=0,
                     increment=True)
@@ -407,7 +410,7 @@ class RefsFromKeyboard:
             if self._d_fparam_enabled_contact_i[3]:
                 self._update_flight_params(contact_idx=3,
                     increment=True)
-        if key.char=="-":
+        if key=="-":
             if self._d_fparam_enabled_contact_i[0]:
                 self._update_flight_params(contact_idx=0,
                     increment=False)
@@ -424,7 +427,7 @@ class RefsFromKeyboard:
     def _set_phase_id(self,
                     key):
 
-        if key.char == "p":
+        if key == "p":
                     
             self.enable_phase_id_change = not self.enable_phase_id_change
 
@@ -436,42 +439,42 @@ class RefsFromKeyboard:
                 LogType.INFO,
                 throw_when_excep = True)
             
-        if key.char == "0" and self.enable_phase_id_change:
+        if key == "0" and self.enable_phase_id_change:
             
             self._update_phase_id(phase_id = 0)
 
-        elif key.char == "1" and self.enable_phase_id_change:
+        elif key == "1" and self.enable_phase_id_change:
 
             self._update_phase_id(phase_id = 1)
         
-        elif key.char == "2" and self.enable_phase_id_change:
+        elif key == "2" and self.enable_phase_id_change:
 
             self._update_phase_id(phase_id = 2)
         
-        elif key.char == "3" and self.enable_phase_id_change:
+        elif key == "3" and self.enable_phase_id_change:
 
             self._update_phase_id(phase_id = 3)
         
-        elif key.char == "4" and self.enable_phase_id_change:
+        elif key == "4" and self.enable_phase_id_change:
 
             self._update_phase_id(phase_id = 4)
         
-        elif key.char == "5" and self.enable_phase_id_change:
+        elif key == "5" and self.enable_phase_id_change:
 
             self._update_phase_id(phase_id = 5)
 
-        elif key.char == "6" and self.enable_phase_id_change:
+        elif key == "6" and self.enable_phase_id_change:
 
             self._update_phase_id(phase_id = 6)
 
-        elif key.char == "r" and self.enable_phase_id_change:
+        elif key == "r" and self.enable_phase_id_change:
         
             self._update_phase_id(phase_id = -1)
 
     def _set_base_height(self,
                     key):
 
-        if key.char == "h":
+        if key == "h":
                     
             self.enable_heightchange = not self.enable_heightchange
 
@@ -486,16 +489,16 @@ class RefsFromKeyboard:
         # if not self.enable_heightchange:
         #     self._update_base_height(reset=True)
 
-        if key.char == "+" and self.enable_heightchange:
+        if key == "+" and self.enable_heightchange:
             self._update_base_height(decrement=False)
         
-        if key.char == "-" and self.enable_heightchange:
+        if key == "-" and self.enable_heightchange:
             self._update_base_height(decrement=True)
 
     def _set_twist(self, 
                 key):
         
-        if key.char == "T":
+        if key == "T":
             self.enable_twist = not self.enable_twist
             info = f"Twist change enabled: {self.enable_twist}"
             Journal.log(self.__class__.__name__,
@@ -507,7 +510,7 @@ class RefsFromKeyboard:
         if not self.enable_twist:
             self._update_navigation(type="twist",reset=True)
 
-        if self.enable_twist and key.char == "x":
+        if self.enable_twist and key == "x":
             self.enable_twist_roll = not self.enable_twist_roll
             info = f"Twist roll change enabled: {self.enable_twist_roll}"
             Journal.log(self.__class__.__name__,
@@ -515,7 +518,7 @@ class RefsFromKeyboard:
                 info,
                 LogType.INFO,
                 throw_when_excep = True)
-        if self.enable_twist and key.char == "y":
+        if self.enable_twist and key == "y":
             self.enable_twist_pitch = not self.enable_twist_pitch
             info = f"Twist pitch change enabled: {self.enable_twist_pitch}"
             Journal.log(self.__class__.__name__,
@@ -523,7 +526,7 @@ class RefsFromKeyboard:
                 info,
                 LogType.INFO,
                 throw_when_excep = True)
-        if self.enable_twist and key.char == "z":
+        if self.enable_twist and key == "z":
             self.enable_twist_yaw = not self.enable_twist_yaw
             info = f"Twist yaw change enabled: {self.enable_twist_yaw}"
             Journal.log(self.__class__.__name__,
@@ -532,7 +535,7 @@ class RefsFromKeyboard:
                 LogType.INFO,
                 throw_when_excep = True)
 
-        if key.char == "+":
+        if key == "+":
             if self.enable_twist_roll:
                 self._update_navigation(type="twist_roll",
                                     increment = True)
@@ -542,7 +545,7 @@ class RefsFromKeyboard:
             if self.enable_twist_yaw:
                 self._update_navigation(type="twist_yaw",
                                     increment = True)
-        if key.char == "-":
+        if key == "-":
             if self.enable_twist_roll:
                 self._update_navigation(type="twist_roll",
                                     increment = False)
@@ -556,7 +559,7 @@ class RefsFromKeyboard:
     def _set_linvel(self,
                 key):
 
-        if key.char == "n":
+        if key == "n":
             self.enable_navigation = not self.enable_navigation
             info = f"Navigation enabled: {self.enable_navigation}"
             Journal.log(self.__class__.__name__,
@@ -568,125 +571,138 @@ class RefsFromKeyboard:
         if not self.enable_navigation:
             self._update_navigation(type="lin",reset=True)
 
-        if key.char == "8" and self.enable_navigation:
+        if key == "8" and self.enable_navigation:
             self._update_navigation(type="frontal_lin",
                             increment = True)
-        if key.char == "2" and self.enable_navigation:
+        if key == "2" and self.enable_navigation:
             self._update_navigation(type="frontal_lin",
                             increment = False)
-        if key.char == "6" and self.enable_navigation:
+        if key == "6" and self.enable_navigation:
             self._update_navigation(type="lateral_lin", 
                             increment = True)
-        if key.char == "4" and self.enable_navigation:
+        if key == "4" and self.enable_navigation:
             self._update_navigation(type="lateral_lin",
                             increment = False)
-        if key.char == "+" and self.enable_navigation:
+        if key == "+" and self.enable_navigation:
             self._update_navigation(type="vertical_lin", 
                             increment = True)
-        if key.char == "-" and self.enable_navigation:
+        if key == "-" and self.enable_navigation:
             self._update_navigation(type="vertical_lin",
                             increment = False)
     
-    def _set_contact_target_pos(self,
-            key):
+    # def _set_contact_target_pos(self,
+    #         key):
 
-        if hasattr(key, 'char'):
+    #     if hasattr(key, 'char'):
             
-            if key.char == "P":
-                self.enable_contact_pos_change = not self.enable_contact_pos_change
-                info = f"Contact pos change enabled: {self.enable_contact_pos_change}"
-                Journal.log(self.__class__.__name__,
-                    "_set_phase_id",
-                    info,
-                    LogType.INFO,
-                    throw_when_excep = True)
+    #         if key == "P":
+    #             self.enable_contact_pos_change = not self.enable_contact_pos_change
+    #             info = f"Contact pos change enabled: {self.enable_contact_pos_change}"
+    #             Journal.log(self.__class__.__name__,
+    #                 "_set_phase_id",
+    #                 info,
+    #                 LogType.INFO,
+    #                 throw_when_excep = True)
 
-                if not self.enable_contact_pos_change:
-                    self.contact_pos_change_vals[:, :]=0
-                    self.enable_contact_pos_change_xyz[0]=0
-                    self.enable_contact_pos_change_xyz[1]=0
-                    self.enable_contact_pos_change_xyz[2]=0
+    #             if not self.enable_contact_pos_change:
+    #                 self.contact_pos_change_vals[:, :]=0
+    #                 self.enable_contact_pos_change_xyz[0]=0
+    #                 self.enable_contact_pos_change_xyz[1]=0
+    #                 self.enable_contact_pos_change_xyz[2]=0
                 
-            if self.enable_contact_pos_change:
-                if key.char == "x":
-                    self.enable_contact_pos_change_xyz[0] = not self.enable_contact_pos_change_xyz[0]
-                if key.char == "y":
-                    self.enable_contact_pos_change_xyz[1] = not self.enable_contact_pos_change_xyz[1]
-                if key.char == "z":
-                    self.enable_contact_pos_change_xyz[2] = not self.enable_contact_pos_change_xyz[2]
+    #         if self.enable_contact_pos_change:
+    #             if key == "x":
+    #                 self.enable_contact_pos_change_xyz[0] = not self.enable_contact_pos_change_xyz[0]
+    #             if key == "y":
+    #                 self.enable_contact_pos_change_xyz[1] = not self.enable_contact_pos_change_xyz[1]
+    #             if key == "z":
+    #                 self.enable_contact_pos_change_xyz[2] = not self.enable_contact_pos_change_xyz[2]
         
-                if key.char == "+":
-                    self.contact_pos_change_vals[np.ix_(self.enable_contact_pos_change_xyz,
-                        self.enable_contact_pos_change_ci)]+= self._contact_dpos
-                if key.char == "-":
-                    self.contact_pos_change_vals[np.ix_(self.enable_contact_pos_change_xyz,
-                        self.enable_contact_pos_change_ci)]-= self._contact_dpos
+    #             if key == "+":
+    #                 self.contact_pos_change_vals[np.ix_(self.enable_contact_pos_change_xyz,
+    #                     self.enable_contact_pos_change_ci)]+= self._contact_dpos
+    #             if key == "-":
+    #                 self.contact_pos_change_vals[np.ix_(self.enable_contact_pos_change_xyz,
+    #                     self.enable_contact_pos_change_ci)]-= self._contact_dpos
                 
-                # not_enabled = [not x for x in self.enable_contact_pos_change_xyz]
-                # self.contact_pos_change_vals[np.ix_(not_enabled,
-                #         self.enable_contact_pos_change_ci)]= 0
+    #             # not_enabled = [not x for x in self.enable_contact_pos_change_xyz]
+    #             # self.contact_pos_change_vals[np.ix_(not_enabled,
+    #             #         self.enable_contact_pos_change_ci)]= 0
                 
-        if key == Key.insert:
-            self.enable_contact_pos_change_ci[0] = not self.enable_contact_pos_change_ci[0]
-        if key == Key.page_up:
-            self.enable_contact_pos_change_ci[1] = not self.enable_contact_pos_change_ci[1]
-        if key == Key.delete:
-            self.enable_contact_pos_change_ci[2] = not self.enable_contact_pos_change_ci[2]
-        if key == Key.page_down:
-            self.enable_contact_pos_change_ci[3] = not self.enable_contact_pos_change_ci[3]
+    #     if key == Key.insert:
+    #         self.enable_contact_pos_change_ci[0] = not self.enable_contact_pos_change_ci[0]
+    #     if key == Key.page_up:
+    #         self.enable_contact_pos_change_ci[1] = not self.enable_contact_pos_change_ci[1]
+    #     if key == Key.delete:
+    #         self.enable_contact_pos_change_ci[2] = not self.enable_contact_pos_change_ci[2]
+    #     if key == Key.page_down:
+    #         self.enable_contact_pos_change_ci[3] = not self.enable_contact_pos_change_ci[3]
                 
-        current_contact_pos_trgt = self._shared_refs.rob_refs.contact_pos.get(data_type="p", 
-                                            robot_idxs=self.cluster_idx_np)
-        current_contact_pos_trgt[:] = self.contact_pos_change_vals.flatten()
+    #     current_contact_pos_trgt = self._shared_refs.rob_refs.contact_pos.get(data_type="p", 
+    #                                         robot_idxs=self.cluster_idx_np)
+    #     current_contact_pos_trgt[:] = self.contact_pos_change_vals.flatten()
 
-        self.contact_pos_change_vals
+    #     self.contact_pos_change_vals
 
     def _on_press(self, key):
-        if self.launch_keyboard_cmds.read_retry(row_index=0,
-                                            col_index=0)[0]:
+
+        cmds_active=True
+        if self.launch_keyboard_cmds is not None:
+            cmds_active=self.launch_keyboard_cmds.read_retry(row_index=0,
+                                            col_index=0)[0]
             
+        if cmds_active:
+        
             self._synch(read=True) # updates  data like
             # current cluster index
 
-            if hasattr(key, 'char'):
-                # phase ids
-                self._set_phase_id(key)
-                # stepping phases (if phase id allows it)
-                self._set_contacts(key=key, 
-                            is_contact=False)
-                # height change
-                self._set_base_height(key)
-                # (linear) navigation cmds
-                self._set_linvel(key)
-                # orientation (twist)
-                self._set_twist(key)
-                
-                self._set_flight_params(key)
+            if not self._read_from_stdin:
+                if hasattr(key, 'char'):
+                    key=key.char
+                    # phase ids
 
-            self._set_contact_target_pos(key)
+            self._set_phase_id(key)
+            # stepping phases (if phase id allows it)
+            self._set_contacts(key=key, 
+                        is_contact=False)
+            # height change
+            self._set_base_height(key)
+            # (linear) navigation cmds
+            self._set_linvel(key)
+            # orientation (twist)
+            self._set_twist(key)
+            
+            self._set_flight_params(key)
+
+            # self._set_contact_target_pos(key)
 
             self._synch(read=False)
 
     def _on_release(self, key):
 
-        if self.launch_keyboard_cmds.read_retry(row_index=0,
-                                            col_index=0)[0]:
+        cmds_active=True
+        if self.launch_keyboard_cmds is not None:
+            cmds_active=self.launch_keyboard_cmds.read_retry(row_index=0,
+                                            col_index=0)[0]
             
-            if hasattr(key, 'char'):
-                
-                # print('Key {0} released.'.format(key.char))
+        if cmds_active:
+            
+            if not self._read_from_stdin:
+                if hasattr(key, 'char'):
+                    key=key.char
+                    # phase ids
 
-                self._set_contacts(key=key, 
-                            is_contact=True)
+            self._set_contacts(key=key, 
+                    is_contact=True)
 
-                if key == keyboard.Key.esc:
-
-                    self._close()
+            if key == "E":
+                self._close()
 
             self._synch(read=False)
 
-    def run(self):
-
+    def run(self, read_from_stdin: bool = False,
+        release_timeout: float = 0.1):
+        
         info = f"Ready. Starting to listen for commands..."
 
         Journal.log(self.__class__.__name__,
@@ -698,10 +714,31 @@ class RefsFromKeyboard:
         self._update_navigation(reset=True,type="lin")
         self._update_navigation(reset=True,type="twist")
 
-        with keyboard.Listener(on_press=self._on_press, 
-                    on_release=self._on_release) as listener:
+        self._read_from_stdin=read_from_stdin
+        if read_from_stdin:
+            from control_cluster_bridge.utilities.keyboard_listener_stdin import KeyListenerStdin
+            import time
 
-            listener.join()
+            with KeyListenerStdin(on_press=self._on_press, 
+                on_release=self._on_release, 
+                release_timeout=release_timeout) as listener:
+                
+                while True:
+                    try:
+                        time.sleep(0.1)  # Keep the main thread alive
+                    except KeyboardInterrupt:
+                        print("Exiting...")
+                        break
+                listener.stop()
+
+        else:
+            from pynput import keyboard
+            from pynput.keyboard import Key
+        
+            with keyboard.Listener(on_press=self._on_press, 
+                        on_release=self._on_release) as listener:
+
+                listener.join()
 
 if __name__ == "__main__":  
 
