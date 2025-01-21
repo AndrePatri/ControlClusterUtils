@@ -58,12 +58,9 @@ class RefsFromKeyboard:
         shared_refs, 
         verbose = False,
         contact_mapping: str = "",
-        env_idx: int = None,
-        ssh_mode: bool = False):
+        env_idx: int = None):
 
         self._env_idx=env_idx
-
-        self._ssh_mode=ssh_mode
 
         self._contact_mapping=self.parse_contact_mapping(contact_mapping)
         if self._contact_mapping is None:
