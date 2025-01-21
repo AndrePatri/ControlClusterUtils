@@ -719,12 +719,8 @@ class RefsFromKeyboard:
                 on_release=self._on_release, 
                 release_timeout=release_timeout) as listener:
                 
-                while True:
-                    try:
-                        time.sleep(0.1)  # Keep the main thread alive
-                    except KeyboardInterrupt:
-                        print("Exiting...")
-                        break
+                while not listener.done:
+                    time.sleep(0.1)  # Keep the main thread alive
                 listener.stop()
 
         else:

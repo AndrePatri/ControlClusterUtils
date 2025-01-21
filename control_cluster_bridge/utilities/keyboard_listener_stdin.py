@@ -7,6 +7,10 @@ import termios
 import tty
 import time
 
+from EigenIPC.PyEigenIPC import VLevel
+from EigenIPC.PyEigenIPC import Journal, LogType
+from EigenIPC.PyEigenIPC import dtype
+
 class KeyListenerStdin:
     def __init__(self, on_press=None, on_release=None, release_timeout=1.0):
         """
@@ -75,7 +79,11 @@ class KeyListenerStdin:
 
         # Exit the program if 'X' is pressed
         if key == 'X':
-            print("Exiting...")
+            Journal.log(self.__class__.__name__,
+                "_handle_key_press",
+                "X press detected -> exiting...",
+                LogType.INFO,
+                throw_when_excep = True)
             self.stop()
 
     def _check_for_key_release(self):
